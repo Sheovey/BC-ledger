@@ -246,10 +246,6 @@ export default function RecordPage() {
           <Text className={`record__amount ${amount.text ? '' : 'record__amount--placeholder'}`}>
             {amount.display}
           </Text>
-          <View className='record__photo' onClick={() => toast('拍照记账暂未接入（需相机权限与图片存储）')}>
-            <Icon name='camera' size={22} />
-            <Text className='record__photo-label'>拍照</Text>
-          </View>
         </View>
         {amount.expression ? <View className='record__hint'>{amount.expression}</View> : null}
         {balanceHint ? (

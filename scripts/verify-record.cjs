@@ -39,6 +39,23 @@ async function tapText(page, selector, text) {
 }
 
 (async () => {
+  // ---------- 静态卫生检查：不留「点了才告诉你没做」的占位入口 ----------
+  // 历史包袱：金额区右侧曾有「拍照」按钮，onClick 只弹「暂未接入」的 toast。
+  // 这种入口审核员点了会记一笔「无实际功能」，用户体验上也属于说了不做。
+  // 这里做静态守卫，防止以后再有人用同样的方式占位。
+  {
+    const recordSrc = fs.readFileSync(
+      path.join(__dirname, '..', 'src', 'pages', 'record', 'index.tsx'),
+      'utf8',
+    );
+    const placeholderHits = recordSrc.match(/暂未接入|未实现|敬请期待|即将上线/g) || [];
+    check(
+      '记一笔页没有未实现的占位入口',
+      placeholderHits.length === 0,
+      placeholderHits.length ? `命中 ${placeholderHits.join('、')}` : '干净',
+    );
+  }
+
   const mp = await automator.connect({ wsEndpoint: `ws://127.0.0.1:${PORT}` });
   console.log('已连接自动化端口\n');
 
