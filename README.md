@@ -7,10 +7,11 @@
 当前版本 **1.1.1**（微信小程序）。
 
 <p align="center">
-  <img src="docs/screenshots/01-home.png" width="176" alt="首页" />
-  <img src="docs/screenshots/02-record.png" width="176" alt="记一笔" />
-  <img src="docs/screenshots/03-ledger.png" width="176" alt="流水" />
-  <img src="docs/screenshots/04-stats.png" width="176" alt="图表" />
+  <img src="docs/screenshots/01-home.png" width="150" alt="首页" />
+  <img src="docs/screenshots/02-record.png" width="150" alt="记一笔" />
+  <img src="docs/screenshots/03-ledger.png" width="150" alt="流水" />
+  <img src="docs/screenshots/04-stats.png" width="150" alt="图表" />
+  <img src="docs/screenshots/05-stats-detail.png" width="150" alt="图表分类明细" />
 </p>
 
 ---
