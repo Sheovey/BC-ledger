@@ -16,7 +16,8 @@
     "dev:h5": "npm run build:h5 -- --watch",
     "typecheck": "tsc --noEmit",
     "save": "node scripts/save.cjs",
-    "log": "git log --oneline --max-count=15"
+    "log": "git log --oneline --decorate --max-count=15",
+    "tag": "git tag -n1 --sort=-creatordate"
   },
   "browserslist": [
     "last 3 versions",
