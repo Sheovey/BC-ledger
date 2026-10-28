@@ -46,6 +46,9 @@
 ```bash
 npm install
 
+# 首次：从模板生成本机项目配置，把 appid 填成自己的小程序 AppID
+cp project.config.example.json project.config.json
+
 # 编译到 dist/
 npm run build:weapp
 
@@ -58,7 +61,9 @@ npm run dev
 
 `dist/` 不进版本库。**克隆后必须先 `npm run build:weapp`**，否则开发者工具打开 `dist/` 会是空的；回退到旧 tag 后同理。
 
-`project.config.json` 里带的是本项目的 AppID。换成你自己的 AppID 后需要重新编译。
+`project.config.json` 也不进版本库——里面带本小程序的 AppID。仓库只提供 `project.config.example.json` 模板。这是个仓库策略，不是安全要求：**小程序的 AppID 属于公开标识，不是密钥**（真正的密钥是 AppSecret，它从未进过仓库）。之所以排除，是因为 GitHub 的 secret scanning 会把 `appid` 认成「Tencent WeChat API App ID」并持续告警，与其每次 dismiss，不如根本不提交。
+
+同理，下面这些也都是「可以公开但没必要提交」的本机信息：`project.private.config.json`（库版本与编译开关）、开发者工具的 appid 缓存。
 
 ### 端到端验收
 

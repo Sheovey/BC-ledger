@@ -17,6 +17,12 @@ preview/
 Thumbs.db
 
 # ---- 微信开发者工具的本机私有配置 ----
-# 记录本机的库版本与编译开关，官方约定不进版本库；每次在 IDE 里改设置都会变，
-# 入库只会产生噪音，且会覆盖协作者自己的偏好。project.config.json 才入库。
+# project.private.config.json 记录本机的库版本与编译开关，官方约定不进版本库；
+# 每次在 IDE 里改设置都会变，入库只会产生噪音，且会覆盖协作者自己的偏好。
 project.private.config.json
+
+# project.config.json 含本小程序的 AppID。AppID 本身不是密钥（真正的密钥是
+# AppSecret，它从未进过仓库），但 GitHub 的 secret scanning 会把它当
+# 「Tencent WeChat API App ID」报出来，所以不入库、只提交模板。
+# 本地首次使用：cp project.config.example.json project.config.json 再把 appid 填成自己的。
+project.config.json

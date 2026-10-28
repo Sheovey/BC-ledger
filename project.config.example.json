@@ -2,7 +2,7 @@
   "miniprogramRoot": "dist/",
   "projectname": "ledger-taro",
   "description": "半寸册 · 个人记账",
-  "appid": "xxxxxxx",
+  "appid": "wx0000000000000000",
   "setting": {
     "urlCheck": true,
     "es6": false,
