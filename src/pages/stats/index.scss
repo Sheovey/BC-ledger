@@ -1,0 +1,286 @@
+/* 统计图表页补充样式。
+   环形图、条形图、趋势柱、排行行的骨架都复用全局 pages.scss，
+   这里补的只有：自绘顶栏、筛选区换行布局、canvas 环形图的叠层、几处内联样式抽类。 */
+
+/* ---------- 自绘顶部栏 ---------- */
+.stats-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0 6px 16px;
+  flex: none;
+}
+
+.stats-head__main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.stats-head__title {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.stats-head__sub {
+  font-size: 12px;
+  color: var(--text-3);
+  /* 账本名 + 区间可能很长，必须截断，否则会把右侧按钮挤出去 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 筛选区 ---------- */
+.stats-filters {
+  padding: 0 16px;
+  flex: none;
+}
+
+/* 全局 .chip-row 是横向滚动（Web 版），本页 4 个 chip 在 343px 内放得下，
+   改成换行布局，避免小程序里横向滚动手感差 */
+.stats-chip-row {
+  flex-wrap: wrap;
+  overflow: visible;
+  padding: 4px 0 0;
+}
+
+.stats-segmented {
+  margin-top: 10px;
+}
+
+/* ---------- 区间选择 ---------- */
+.stats-range__mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 与 .stats-range__label 的 min-width 配合，夹在两个箭头中间不抖动 */
+  min-width: 158px;
+}
+
+.stats-range__tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* 日/周/月/年 四个小 chip：Web 版用内联 style 写死高度与字号 */
+.chip--sm {
+  height: 24px;
+  padding: 0 9px;
+  font-size: 11.5px;
+  margin: 0 1px;
+}
+
+/* ---------- 环形图（canvas 版） ---------- */
+/* canvas 画不出 CSS 字体的层次，中心金额用绝对定位的 View 叠上去：
+   relative 容器 + absolute 居中，宽高由内联 style 与 canvas 保持一致。 */
+.donut-canvas-wrap {
+  position: relative;
+  margin: 0 auto;
+}
+
+.donut-canvas {
+  display: block;
+}
+
+.donut-center {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 让点击穿透到 canvas，否则点中心区域不会触发切换 */
+  pointer-events: none;
+}
+
+.donut-center__label {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.2;
+}
+
+.donut-center__value {
+  margin-top: 3px;
+  font-size: 23px;
+  font-weight: 650;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.donut-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+/* ---------- 环形图下方说明 ---------- */
+.donut-caption {
+  text-align: center;
+  margin-top: 2px;
+}
+
+.donut-caption__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.donut-caption__name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.donut-caption__amount {
+  margin-left: 8px;
+}
+
+.donut-caption__percent {
+  margin-left: 6px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+.donut-caption__hint {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+/* ---------- 条形图 ---------- */
+/* Web 版 .bar-item__name 是 span 里嵌 span（名称 + 百分比），
+   改成 View + Text 后要自己保证两者基线对齐 */
+.bar-item__name {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.bar-item__percent {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ---------- 排行 ---------- */
+/* Web 版用内联 style={{ overflow: 'hidden' }} 让首尾行跟着卡片圆角裁切 */
+.card--clip {
+  overflow: hidden;
+}
+
+.legend-name {
+  display: flex;
+  align-items: baseline;
+}
+
+.legend-name__count {
+  margin-left: 6px;
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+/* ---------- 空状态卡片 ---------- */
+.stats-empty-card {
+  margin: 14px 16px;
+}
+
+/* ---------- 趋势图 ---------- */
+/* 图例：「■ 支出  ■ 收入」，Web 版靠内联 span 加两个空格排版 */
+.stats-legend {
+  display: flex;
+  align-items: center;
+}
+
+.stats-legend__label {
+  margin-left: 4px;
+  margin-right: 10px;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+.month-bars__foot {
+  padding: 8px 16px 0;
+  font-size: 11.5px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+/* ---------- 排行明细面板 ---------- */
+/* 每行被 .rank-group 包了一层，全局的 `.rank-row + .rank-row` 相邻选择器失效
+   （各自成了不同父元素下的唯一子元素），分隔线改由分组容器提供，
+   否则卡片里行与行之间会没有横线 —— 验收不看这个，人眼一眼能看出来 */
+.rank-group + .rank-group {
+  border-top: 1px solid var(--line);
+}
+
+/* 按下态必须比「展开态」退后一档。
+   原来这里和展开态同为 surface-2，两个状态在视觉上完全分不开，
+   用户只能靠灰底猜「这行现在是按着的还是开着的」—— 本次误判的直接来源。 */
+.rank-row--hover {
+  background: var(--surface-3);
+}
+
+/* 展开态：用全站统一的暖橙语言（chip--active / cat-sub--active / keypad__type--active
+   都是 accent-soft + accent-deep），而不是中性灰。左侧 3px 橙条让「展开的是哪一行」
+   在没有明细面板时也能一眼看出。
+   条件里带 detailOpen（见 stats/index.tsx），收起时整行不留任何底色。 */
+.rank-row--open {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.rank-row--open .legend-name text:first-child {
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+/* 展开行被按住时不要退回灰色，改成把橙底再压深一档。
+   #fae8d3 = accent-soft(#fdf1e2) 叠 8% 的 accent(#ee9a3f)，避免引入新的设计变量 */
+.rank-row--open.rank-row--hover {
+  background: #fae8d3;
+}
+
+.rank-detail {
+  background: var(--surface-2);
+}
+
+/* 明细行缩进到排行名称列，视觉上「挂」在该分组下面，而不是另起一块 */
+.rank-detail .tx-row {
+  padding-left: 46px;
+  background: transparent;
+}
+
+.rank-detail .tx-row--hover {
+  background: var(--surface-3);
+}
+
+.rank-detail__more,
+.rank-detail__end {
+  padding: 10px 14px 11px 46px;
+  font-size: 12px;
+  color: var(--text-3);
+  border-top: 1px solid var(--line);
+}
+
+.rank-detail__more {
+  color: var(--accent-deep);
+}
+
+.rank-detail__more--hover {
+  background: var(--surface-3);
+}

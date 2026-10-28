@@ -1,0 +1,7 @@
+# 统一按 LF 存储，避免 Windows 换行转换在 diff 里制造「整个文件都改了」的假象
+* text=auto eol=lf
+
+# 真·二进制
+*.png binary
+*.jpg binary
+*.xlsx binary

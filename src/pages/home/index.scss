@@ -1,0 +1,78 @@
+/* 首页补充样式。
+   Web 版这几处用的是内联 style（flex:1、grid 布局等），搬到小程序时抽成语义类，
+   一是便于统一调整，二是 WXSS 里用 margin 代替 gap，避免低版本基础库不支持 flex gap。 */
+
+.search-bar__ph {
+  flex: 1;
+  text-align: left;
+}
+
+/* .book-card__main 已移到全局 pages.scss（设置页也要用） */
+
+.quick-grid {
+  display: flex;
+}
+
+.quick-cell {
+  flex: 1;
+  margin-right: 8px;
+  padding: 14px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-cell:last-child {
+  margin-right: 0;
+}
+
+.quick-cell__label {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 6px;
+}
+
+.top-cat {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+}
+
+.top-cat__avatar {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  margin-right: 12px;
+}
+
+.top-cat__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.top-cat__name {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.top-cat__meta {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+.top-cat__amount {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 账本卡片改成「切换」语义后，名称行要能放下「当前」徽标 */
+.home-book__name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-book__badge {
+  flex: none;
+}

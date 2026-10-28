@@ -1,0 +1,20 @@
+{
+  "miniprogramRoot": "dist/",
+  "projectname": "ledger-taro",
+  "description": "小账本 · 个人记账",
+  "appid": "wx716304c66c5e4150",
+  "setting": {
+    "urlCheck": true,
+    "es6": false,
+    "enhance": false,
+    "postcss": false,
+    "minified": false,
+    "coverView": true,
+    "nodeModules": false,
+    "checkInvalidKey": true,
+    "checkSiteMap": false
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.5.5",
+  "condition": {}
+}

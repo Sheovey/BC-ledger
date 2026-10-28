@@ -1,0 +1,47 @@
+/* 模板页补充样式。.row / .chip / .segmented / .input 复用全局定义。 */
+
+.tpl-section {
+  margin-top: 6px;
+}
+
+/* Web 版用内联样式给模板行的小头像上色（accent-soft 底 + accent-deep 图标） */
+.tpl-avatar {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+/* ---------- 表单弹层 ---------- */
+.tpl-form {
+  padding: 10px 18px 6px;
+}
+
+.tpl-form__label {
+  padding: 0 0 8px;
+}
+
+.tpl-form__label--gap {
+  padding: 16px 0 8px;
+}
+
+.tpl-ph {
+  color: var(--text-3);
+}
+
+.tpl-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* chip 在 flex 行里会因 white-space:nowrap 溢出，限制最大宽度 */
+.tpl-chip {
+  max-width: 100%;
+  margin: 0 8px 8px 0;
+}
+
+.tpl-submit {
+  margin: 20px 0 4px;
+}
+
+.tpl-delete {
+  margin-bottom: 8px;
+}

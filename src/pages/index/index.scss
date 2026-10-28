@@ -1,0 +1,67 @@
+.probe {
+  padding: 16px;
+
+  &__card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+
+  &__title {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: #0e6c53;
+    margin-bottom: 6px;
+  }
+
+  &__desc {
+    display: block;
+    font-size: 13px;
+    color: #6b7280;
+  }
+
+  &__label {
+    display: block;
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 4px;
+  }
+
+  &__count {
+    display: block;
+    font-size: 32px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 12px;
+  }
+
+  &__btn {
+    background: #0e6c53;
+    border-radius: 10px;
+    padding: 10px 0;
+    text-align: center;
+  }
+
+  &__btn-text {
+    color: #ffffff;
+    font-size: 15px;
+  }
+
+  &__hint {
+    display: block;
+    font-size: 12px;
+    color: #9ca3af;
+    margin: 16px 0 8px;
+  }
+
+  // 100px 应在 375 设计稿下等于 200rpx，即半屏宽
+  &__ruler {
+    width: 100px;
+    height: 24px;
+    background: linear-gradient(90deg, #09cc53, #16be84);
+    border-radius: 6px;
+  }
+}

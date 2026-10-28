@@ -1,0 +1,217 @@
+/* 流水页样式。
+   头部、筛选区是本页独有；时间轴与流水行复用全局 components/pages 里的定义，
+   这里只补小程序端必须重写的几处（标签选择器、Input 尺寸、chip 横向排布）。 */
+
+/* ---------- 自绘顶部栏 ---------- */
+.ledger-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 右侧留白由页面内联的 paddingRight 覆盖（要让开胶囊按钮） */
+  padding: 2px 0 8px 16px;
+  flex: none;
+}
+
+.ledger-head__main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ledger-head__title {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.ledger-head__sub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ---------- 筛选区 ---------- */
+.ledger-filters {
+  padding: 0 16px;
+  flex: none;
+}
+
+/* Taro 的 Input 编译后是原生 input，全局样式里的
+   `.search-bar input` 在 WXSS 下不保证命中（组件可能带内联宽高），
+   所以给 Input 单独一个类显式定尺寸。 */
+.search-bar__input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  font-size: 13.5px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+}
+
+.search-ph {
+  color: var(--text-3);
+  font-size: 13.5px;
+}
+
+.ledger-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* 账本名可能很长（「家庭日常开销专用账本」这种），必须截断，
+   否则会把右侧分段控件挤出屏幕。 */
+.ledger-row__book {
+  max-width: 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger-row__seg {
+  flex: 1;
+}
+
+/* 全局 .chip-row 是 overflow-x: auto（Web 版横向滚动），
+   小程序里 View 的可滚动容器手感差且容易串到页面纵向滚动，
+   本页 5 个 chip 在 343px 内容宽内放得下，直接换行布局。 */
+.ledger-chip-row {
+  flex-wrap: wrap;
+  overflow: visible;
+  padding: 10px 0 2px;
+}
+
+/* ---------- 月份分段（独占一行） ---------- */
+.ledger-month-seg {
+  margin-top: 8px;
+}
+
+/* 四段必须等宽。
+   早期给区间项写 flex: 1.7 + font-size: 11.5px，是为了硬塞下「25.11-26.02」，
+   代价是四段宽度不一致（70.4 ×3 + 119.7）、区间项字号还比别的项小 1.5px，
+   看起来像排版错乱。实际 343px 内容宽下四段各 82.75px，
+   标签在 13px tabular-nums 下约 70px，等宽本来放得下 —— 当初是过度保守。
+   这里只留一点横向内边距当余量，字号与 flex 都回到继承。 */
+.segmented__item--range {
+  padding: 0 2px;
+}
+
+/* ---------- 月份区间弹层 ---------- */
+.range-sheet {
+  /* 横向 18px 与 .sheet__head / .dialog__actions / .sheet-hint 对齐，
+     否则「起始月份」会贴着屏幕左边缘，和右侧选择框一左一右不对称 */
+  padding: 2px 18px 4px;
+}
+
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+}
+
+.range-row__label {
+  flex: none;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+.range-row__picker {
+  flex: 1;
+  text-align: right;
+}
+
+.range-row__value {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 账期名 ≠ 自然月时，把实际包含的日期也摆出来，避免对不上账 */
+.range-sheet__span {
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--text-3);
+  line-height: 1.6;
+}
+
+.range-sheet__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.range-sheet__actions .btn {
+  flex: 1;
+}
+
+/* ---------- 加载更多 ---------- */
+.load-more {
+  margin: 14px 16px 0;
+  padding: 11px 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.load-more--hover {
+  background: var(--surface-2);
+}
+
+/* ---------- 筛选合计 ---------- */
+.ledger-totals {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+}
+
+.ledger-totals__label {
+  color: var(--text-3);
+}
+
+.ledger-totals__num {
+  font-size: 12.5px;
+}
+
+.ledger-totals__net {
+  margin-left: auto;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+/* ---------- 时间轴 ---------- */
+/* 全局 .timeline 已有左右 16px 内边距，这里只补月份标题。
+   Web 版月份标题是内联样式，小程序换成类，避免内联对象在小程序
+   每次 setData 都参与 diff。 */
+/* 月份标题是这一屏的最高层级，必须压过下级的分组标题。
+   原来是 11.5px/400/--text-3，而它下级的 .day-head__day（「27日」）
+   是 13px/600/--text-2 —— 下级更大更重更深，月份看起来像脚注。
+   现在三级递进：月 14/600/--text ＞ 日 13/600/--text-2 ＞ 行内时间 11/--text-3。 */
+.timeline__month {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 10px 0 2px;
+}
+
+/* 弹层里的账本行：全局 .settings-row__label 是 flex:1，
+   归档徽标需要自己有间距。 */
+.settings-row__label .badge {
+  margin-left: 6px;
+}

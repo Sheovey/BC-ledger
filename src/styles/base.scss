@@ -1,0 +1,113 @@
+/* ============================================================
+   设计变量与基础重置
+   配色遵循国内记账习惯：收入=红，支出=绿
+   ============================================================ */
+page {
+  --bg: #f6f4f1;
+  --bg-grad: radial-gradient(1200px 600px at 50% -10%, #fff6ea 0%, transparent 60%);
+  --surface: #ffffff;
+  --surface-2: #faf9f7;
+  --surface-3: #f1efeb;
+  --line: #ece9e4;
+  --line-strong: #dedbd5;
+  --text: #1c1f26;
+  --text-2: #6b7280;
+  --text-3: #9aa1ad;
+  --accent: #ee9a3f;
+  --accent-deep: #dd8629;
+  --accent-soft: #fdf1e2;
+  --income: #df5a4d;
+  --income-soft: #fdeeec;
+  --expense: #33a06a;
+  --expense-soft: #eaf6ef;
+  --danger: #d9534f;
+  --radius-lg: 20px;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 1px 2px rgba(28, 31, 38, 0.04);
+  --shadow: 0 1px 2px rgba(28, 31, 38, 0.04), 0 10px 28px -18px rgba(28, 31, 38, 0.35);
+  --tabbar-h: 62px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+}
+
+view,
+text,
+image,
+button,
+input,
+textarea,
+scroll-view {
+  box-sizing: border-box;
+}
+
+page {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--bg);
+  background-image: var(--bg-grad);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+  outline: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+/* 滚动条弱化，避免破坏界面干净度 */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}

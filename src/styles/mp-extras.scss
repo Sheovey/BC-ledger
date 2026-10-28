@@ -1,0 +1,76 @@
+/* 小程序端新增的通用样式。
+ *
+ * 为什么不写进 base/components/pages：
+ * 那三个文件是从 Web 版逐行搬来的，保持"能对着原文件比对"是很重要的性质。
+ * 这里放的全是 Web 版没有、为小程序新写的组件（目前是开关），
+ * 混进去会让日后对照变得困难。
+ */
+
+/* ---------- 开关 ---------- */
+/* Web 版用 <button> + 内联 style 画开关（见 SettingsPage 的深色模式、
+   AccountsPage 的「计入总资产」）。小程序里内联 style 的对象每次渲染都参与
+   diff，且尺寸写死在 JSX 里不好统一调，改成类。 */
+.switch {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  transition: background 0.18s ease;
+  flex: none;
+}
+
+.switch--on {
+  background: var(--accent);
+}
+
+.switch__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: left 0.18s ease;
+}
+
+.switch--on .switch__knob {
+  left: 23px;
+}
+
+/* ---------- 二级页自绘导航栏（components/PageHead） ---------- */
+/* 与 accounts 页的 .acc-head 视觉一致，抽成公共类后，
+   分类 / 账本 / 预算三个新页面不必各写一份。 */
+.page-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0 6px 8px;
+  flex: none;
+}
+
+.page-head__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.page-head__title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.page-head__sub {
+  font-size: 11.5px;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

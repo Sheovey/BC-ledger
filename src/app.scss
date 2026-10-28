@@ -1,0 +1,91 @@
+// 全局样式入口。
+//
+// 迁移自 Web 版（ledger-app/src/styles/），三份样式原样搬入，仅做两处平台适配：
+// 1. `:root` → `page`（小程序没有 :root，根元素是 page）
+// 2. 删除 `html/body/#root` 选择器，统一收敛到 `page`
+//
+// 顺序必须先变量后组件：base 定义 --bg/--text/--accent 等变量，
+// components 与 pages 都依赖它们。
+@import './styles/base';
+@import './styles/components';
+@import './styles/pages';
+// 小程序新增的通用组件样式（开关等），不来自 Web 版
+@import './styles/mp-extras';
+
+// 图标样式（52 个 SVG data-uri）放全局：app.wxss 只加载一份，
+// 若放进各页面 wxss 会按页重复计入主包体积。
+@import './components/icon';
+
+/* ============================================================
+   WXSS 兼容兜底
+
+   Web 版为桌面/移动浏览器写的少数现代 CSS 在微信内核上不一定生效，
+   这些声明写在这里（import 之后）才能覆盖原件：
+
+   1. 100dvh：Android 微信部分机型不认 dvh，整条声明会被丢弃，
+      导致 .shell 撑不开、.record 塌成内容高度。补 100vh。
+   2. color-mix()：需要 Chrome 111+。低版本直接失效 → 导航栏变透明、
+      页面内容从底下透出来。这里给一条等价实色，宁可少一点毛玻璃。
+   3. inset 简写需要 Chrome 87+，老机器上整条失效会让弹层退化成
+      没有定位的空盒子。改用四个方向的长写属性，任何版本都认。
+   4. .sheet 的 82dvh 同理给 vh 兜底，否则长列表弹层会顶穿屏幕。
+   ============================================================ */
+.shell {
+  min-height: 100vh;
+}
+
+.overlay {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.sheet {
+  max-height: 82vh;
+}
+
+.tabbar {
+  background: rgba(255, 255, 255, 0.97);
+}
+
+.topbar {
+  background: rgba(246, 244, 241, 0.94);
+}
+
+.tabbar__label {
+  font-size: 10.5px;
+  line-height: 1.2;
+}
+
+.tabbar__add-label {
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   View 替代 button 的对齐补丁
+
+   Web 版这些元素是 <button>，浏览器默认给按钮文字水平+垂直居中。
+   小程序里 button 自带边框/hover/居中样式，改样式反而更费劲，
+   所以统一用 View 当可点击容器 —— 代价是丢了这份默认居中。
+   实测表现：「全部/本月/上月」里的文字贴在左上角，白底选中块里明显偏左。
+
+   这里只补「靠 button 默认行为居中」的那几个类；
+   本身已经写了 flex 居中的（.btn / .icon-btn / .chip / .cat-item）不用管。
+   ============================================================ */
+.segmented__item,
+.cat-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* .text-btn 原先是行内按钮，必须保住行内语义（inline-flex），
+   否则首页的「查看全部」「全部账本」会各占一行。 */
+.text-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

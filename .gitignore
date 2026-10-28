@@ -1,0 +1,17 @@
+# ---- 依赖 ----
+node_modules/
+
+# ---- 构建产物 ----
+# 每次 build 都原地覆盖，入库只会让 diff 全是噪音。
+# 回退代码后重新 npm run build:weapp 即可，所以不入库。
+dist/
+.swc/
+build.log
+
+# ---- 验收产物 ----
+# preview/ 下全是 verify-*.cjs 与 shot-*.cjs 跑出来的截图和 xlsx，可随时重新生成。
+preview/
+
+# ---- 编辑器 / 系统 ----
+.DS_Store
+Thumbs.db
