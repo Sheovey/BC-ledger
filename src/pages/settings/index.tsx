@@ -45,7 +45,11 @@ import './index.scss';
  *    这一点必须明说，否则用户会以为和浏览器一样清缓存没事。
  */
 
-const APP_VERSION = '1.0.0';
+/**
+ * 显示用版本号，**必须与微信后台上传的版本号一致**。
+ * 提审时后台记录的版本来自 `cli upload -v`，界面这里读不到，只能手改同步。
+ */
+const APP_VERSION = '1.1.0';
 const CURRENCIES = ['¥', '$', '€', '£'];
 const MONTH_DAYS = [1, 5, 10, 15, 20, 25];
 
@@ -167,7 +171,7 @@ export default function SettingsPage() {
     setConfirmRestore(false);
     const restored = restoreBackup();
     if (!restored) {
-      toast('没有可用的本机存档', 'warn');
+      toast('没有可回滚的上一版', 'warn');
       return;
     }
     importData(restored);
@@ -308,7 +312,7 @@ export default function SettingsPage() {
           <Icon name='download' size={18} />
           <Text className='settings-row__label'>
             导出完整备份
-            <Text className='settings-row__sub'>JSON 格式，可发给文件传输助手保存</Text>
+            <Text className='settings-row__sub'>JSON 格式 · 发到聊天存一份，换手机靠它恢复</Text>
           </Text>
           <Text className='settings-row__value'>{exportLabel}</Text>
         </View>
@@ -344,12 +348,12 @@ export default function SettingsPage() {
       </View>
 
       <View className='settings-group'>
-        <View className='settings-group__title'>本机存档</View>
+        <View className='settings-group__title'>本机自动存档</View>
         <View className='settings-row' hoverClass='settings-row--hover' onClick={doShareArchive}>
           <Icon name='upload' size={18} />
           <Text className='settings-row__label'>
             发送最新存档到聊天
-            <Text className='settings-row__sub'>唯一能在清缓存、换手机后把数据带走的方式</Text>
+            <Text className='settings-row__sub'>Excel 档案，可跨设备查阅，但不能用来恢复数据</Text>
           </Text>
           <Text className='settings-row__value'>{sharedLabel}</Text>
         </View>
@@ -372,7 +376,7 @@ export default function SettingsPage() {
           <Icon name='warn' size={18} />
           <Text className='settings-note'>
             存档写在手机的文件目录里，和微信缓存同生共死——删除小程序或清理微信存储空间会一起消失。
-            它防的是误点「清空所有数据」这类手滑，防不了清缓存和换手机，那两条只有「发送到聊天」能扛。
+            它防的是误点「清空所有数据」这类手滑，防不了清缓存和换手机，那两条只有把 JSON 备份发到聊天才救得回来。
           </Text>
         </View>
       </View>
@@ -401,7 +405,7 @@ export default function SettingsPage() {
             在微信里「删除小程序」或「清理微信存储空间」会把记录一起清掉。
             本机有四层保护：改动自动留上一版可回滚、每次使用自动生成 Excel 存档、
             可导出 JSON 长期保存、换手机时用「从备份恢复」带回来。
-            前两层都在手机里，只有发到聊天的那份能跨设备。
+            前两层都在手机里，只有发到聊天的才能跨设备。
           </Text>
         </View>
       </View>
@@ -496,7 +500,7 @@ export default function SettingsPage() {
       ) : null}
 
       {archiveOpen ? (
-        <Sheet onClose={() => setArchiveOpen(false)} title='本机存档'>
+        <Sheet onClose={() => setArchiveOpen(false)} title='本机自动存档'>
           <View className='sheet-hint'>
             表格可以直接点开预览，打开后用右上角菜单还能转发出去；JSON 快照用于把整份数据换回来。
           </View>

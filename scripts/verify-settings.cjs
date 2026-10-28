@@ -93,9 +93,9 @@ async function rowTexts(page) {
   const groups = await page.$$('.settings-group__title');
   const groupTitles = [];
   for (const g of groups) groupTitles.push((await g.text()).trim());
-  // 用集合包含而不是精确相等：新增分组（如「本机存档」）不应打断这条断言，
+  // 用集合包含而不是精确相等：新增分组（如「本机自动存档」）不应打断这条断言，
   // 它真正要保证的是「五类入口都在、且没有多余的重复标题」。
-  const EXPECTED_GROUPS = ['账本与科目', '偏好设置', '数据', '本机存档', '关于'];
+  const EXPECTED_GROUPS = ['账本与科目', '偏好设置', '数据', '本机自动存档', '关于'];
   const missingGroups = EXPECTED_GROUPS.filter((g) => !groupTitles.includes(g));
   check(
     '五个分组齐全',
@@ -119,6 +119,14 @@ async function rowTexts(page) {
   ];
   const missingData = dataRows.filter((m) => !joined.includes(m));
   check('数据操作 6 项齐全', missingData.length === 0, missingData.length ? `缺 ${missingData.join('、')}` : '全部命中');
+
+  // 「导出备份」与「本机自动存档」最容易被混为一谈，文案必须点出唯一关键差异：
+  // 前者能换手机恢复，后者只是可跨设备查阅的 Excel，回灌不了。
+  const shareRow = texts.find((t) => t.includes('发送最新存档到聊天')) || '';
+  const exportBackupRow = texts.find((t) => t.includes('导出完整备份')) || '';
+  check('「发送最新存档」标明不能用来恢复', shareRow.includes('不能用来恢复'), shareRow || '未找到该行');
+  check('「导出完整备份」标明换手机靠它恢复', exportBackupRow.includes('换手机'), exportBackupRow || '未找到该行');
+  check('存档分组名写明「自动」', groupTitles.includes('本机自动存档'), groupTitles.join('/'));
 
   // 存储占用
   const usageRow = texts.find((t) => t.includes('本地数据占用')) || '';
