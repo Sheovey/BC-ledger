@@ -15,3 +15,8 @@ preview/
 # ---- 编辑器 / 系统 ----
 .DS_Store
 Thumbs.db
+
+# ---- 微信开发者工具的本机私有配置 ----
+# 记录本机的库版本与编译开关，官方约定不进版本库；每次在 IDE 里改设置都会变，
+# 入库只会产生噪音，且会覆盖协作者自己的偏好。project.config.json 才入库。
+project.private.config.json
