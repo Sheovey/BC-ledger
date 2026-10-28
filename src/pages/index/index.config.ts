@@ -1,3 +1,3 @@
 export default definePageConfig({
-  navigationBarTitleText: '小账本',
+  navigationBarTitleText: '半寸册',
 })

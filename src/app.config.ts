@@ -21,7 +21,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#0e6c53',
-    navigationBarTitleText: '小账本',
+    navigationBarTitleText: '半寸册',
     navigationBarTextStyle: 'white',
     backgroundColor: '#f5f6f7',
   },
