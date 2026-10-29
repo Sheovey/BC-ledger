@@ -66,26 +66,9 @@
 }
 
 /* ---------- 通用确认弹层 ----------
-   Web 版这两块是内联 style，小程序里抽成类，否则两个按钮会紧贴左边叠在一起 */
-.dialog__desc {
-  padding: 4px 18px 16px;
-  font-size: 13.5px;
-  color: var(--text-2);
-  line-height: 1.65;
-}
-
-.dialog__actions {
-  display: flex;
-  padding: 4px 18px 16px;
-}
-
-.dialog__actions .btn {
-  flex: 1;
-}
-
-.dialog__actions .btn + .btn {
-  margin-left: 10px;
-}
+   .dialog__desc / .dialog__actions 已上移到 src/styles/components.scss（全局）。
+   原因：ConfirmDialog 是共享组件，7 个页面都在用，而小程序页面样式彼此隔离，
+   留在这里只有记账页生效，其余页面会退化成「文字贴边 + 按钮挤左侧」。 */
 
 /* ---------- 弹层内的选择列表 ---------- */
 .sheet__group {

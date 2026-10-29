@@ -393,7 +393,8 @@
   flex-direction: column;
   background: var(--surface);
   border-radius: 22px 22px 0 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* 底部安全区只在 .sheet__body 里留一次。原先这里也有一份 env()，
+     两处叠加会让弹层底部凭空多出 30 多 px 空白（确认框按钮下方尤其明显）。 */
   animation: sheet-up 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -412,8 +413,47 @@
 
 .sheet__body {
   overflow-y: auto;
-  padding: 8px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 0 calc(6px + env(safe-area-inset-bottom, 0px));
   -webkit-overflow-scrolling: touch;
+}
+
+/* ---------- 确认弹层（ConfirmDialog） ----------
+
+   ⚠️ 这几条**必须留在全局**。曾经它们写在 pages/record/index.scss 里，
+   而小程序页面样式是隔离的：ConfirmDialog 被 7 个页面共用，结果只有记账页
+   的确认框排版正确，其余 6 页（我的/账户/账本/分类/项目/模板）的说明文字
+   贴死屏幕左右边缘、两个按钮挤在左侧只占文字宽度。
+
+   判据：任何被 ≥2 个页面使用的类，都不许定义在页面级 scss 里。
+
+   .sheet__body 的左右 padding 是 0（各弹层内部容器自带 18px），
+   所以弹层里直挂的文字必须自己补 18px 横向留白。 */
+.dialog__desc {
+  padding: 4px 18px 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+.dialog__actions {
+  display: flex;
+  padding: 0 18px 4px;
+}
+
+/* 两个按钮均分整行。Web 版靠内联 style={{ flex: 1 }} 实现，
+   小程序里改由 CSS 接管（内联样式在部分基础库上会被 wxss 的同名声明覆盖）。 */
+.dialog__actions .btn {
+  flex: 1;
+  min-width: 0;
+  padding: 0 12px;
+}
+
+.dialog__actions .btn + .btn {
+  margin-left: 10px;
+}
+
+.btn--hover {
+  opacity: 0.82;
 }
 
 @media (min-width: 860px) {

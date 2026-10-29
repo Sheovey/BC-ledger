@@ -64,13 +64,13 @@ export function ConfirmDialog({
         <View className='dialog__desc'>{description}</View>
       ) : null}
       <View className='dialog__actions'>
-        <View className='btn btn--ghost' onClick={onCancel} style={{ flex: 1 }}>
+        <View className='btn btn--ghost' hoverClass='btn--hover' onClick={onCancel}>
           取消
         </View>
         <View
           className={`btn ${tone === 'danger' ? 'btn--danger' : 'btn--primary'}`}
+          hoverClass='btn--hover'
           onClick={onConfirm}
-          style={{ flex: 1 }}
         >
           {confirmText}
         </View>
