@@ -37,6 +37,7 @@
 - **Taro 4.3.1** + **React 18.3** + **TypeScript 5.6**，编译目标 `weapp`
 - **Zustand** 管状态，写入走 250ms 防抖后再分片落盘
 - **Sass** 写样式，`designWidth: 375`（1px → 2rpx）
+- **图标**：Phosphor Icons **Bold**（`@phosphor-icons/core`，MIT），由 `npm run icons` 生成 52 个 CSS mask 规则
 - **零运行时依赖**做导出：xlsx 由手写 OOXML + STORE 版 ZIP（含自实现 CRC32）生成，省掉 SheetJS 约 900KB 的体积
 
 ## 本地跑起来
@@ -153,6 +154,9 @@ docs/screenshots/     # README 用图
 - **不留「点了才说没做」的占位入口**。审核会记「功能不完整」，且不调对应 API 就能少一项隐私声明。要么做完，要么不留入口。
 - **版本号有三个手动位置，彼此无自动关联**：`src/pages/settings/index.tsx` 的 `APP_VERSION`（「关于」里显示的那个）、`package.json` 的 `version`、以及 `cli upload -v` 的参数。三处要一起改，漏了就会出现「界面显示 1.1.0、后台记录 1.1.1」这种对不上的情况。
 - **预设数据改名必须走迁移**。改 `seed.ts` 对老用户无效，得在 `persist.ts` 里配一条「id + 旧名」双命中的重命名规则，并递增 `DATA_VERSION`。
+- **图标不要手改**。`src/components/icon.scss` 与 `icon-names.ts` 都由 `node scripts/gen-icons.cjs`（`npm run icons`）生成：它读 `node_modules/@phosphor-icons/core/assets/bold/*.svg`，按脚本内的 `MAP` 把项目图标名映射到 Phosphor 名，缺一个就报错退出。要换风格改 `SOURCE_STYLE` 即可。
+  - 为什么不用细描边：1.65px 描边缩到 20px 时实际线宽是 1.375px，非整数像素被抗锯齿摊成两行半灰像素，观感发虚。Phosphor 是填充路径，粗细烘焙在图形里。
+  - 为什么 `back/forward/down/up` 例外：Phosphor 只有实心三角形，16px 行内箭头会被读成「播放键」，所以这四个 chevron 保留手绘线描（线宽 2.0）。
 - **`cli auto` 的端口随命令结束立即释放**，验收脚本必须与它串在同一条命令里（见上）。
 
 ## 发布

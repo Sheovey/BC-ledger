@@ -1,4 +1,4 @@
-/* 自动生成，勿手改：由 scripts/gen-icons.cjs 从 Icon.tsx 转换而来 */
+/* 自动生成，勿手改：node scripts/gen-icons.cjs */
 export const ICON_NAMES = [
   'back',
   'forward',
@@ -22,6 +22,14 @@ export const ICON_NAMES = [
   'pie',
   'budget',
   'template',
+  'upload',
+  'download',
+  'filter',
+  'calendar',
+  'tag',
+  'refresh',
+  'warn',
+  'eye',
   'food',
   'traffic',
   'shopping',
@@ -44,15 +52,7 @@ export const ICON_NAMES = [
   'wechat',
   'card',
   'credit',
-  'upload',
-  'download',
-  'filter',
-  'calendar',
-  'tag',
-  'refresh',
-  'warn',
-  'eye',
 ] as const;
 
-/** 任意字符串也允许，但只有清单内的名字有真实图标 */
+/** 任意字符串也允许，但只有清单内的名字有真实图标（Icon 组件会把未知名回退到 other） */
 export type IconName = (typeof ICON_NAMES)[number] | (string & {});

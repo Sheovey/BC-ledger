@@ -11,10 +11,12 @@ import { ICON_NAMES, type IconName } from './icon-names';
  *   元素本身只设置 background-color: currentColor。
  * - 这样颜色的来源与 Web 版完全一致：跟随父级 color 继承。
  *   实测（pages/icon-test）父级设 color: red 时图标变红，120 处依赖继承的调用无需改动。
- * - strokeWidth 在数据 URI 里已固化（默认 1.65），运行期无法改变线条粗细；
- *   目前只有 TabBar 的「+」需要 2.2，为此单独提供了一个加粗变体。
+ * - 图标图形取自 Phosphor Icons BOLD（@phosphor-icons/core，MIT），是填充路径而非描边，
+ *   所以 strokeWidth 在运行期无法改变粗细（已烘焙进路径）。该 prop 只为兼容旧调用保留，
+ *   仅对 plus 生效（切换到 .ic-plus--thick，形状同为 Bold 加号）。
+ * - back/forward/down/up 四个 chevron 仍是手绘线描，线宽 2.0。
  *
- * 图标数据由 scripts/gen-icons.cjs 从 Web 版 Icon.tsx 自动转换，勿手改 icon.scss。
+ * 图标数据由 scripts/gen-icons.cjs 生成，勿手改 icon.scss / icon-names.ts。
  */
 
 const KNOWN = new Set<string>(ICON_NAMES as readonly string[]);
