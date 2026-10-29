@@ -26,3 +26,6 @@ project.private.config.json
 # 「Tencent WeChat API App ID」报出来，所以不入库、只提交模板。
 # 本地首次使用：cp project.config.example.json project.config.json 再把 appid 填成自己的。
 project.config.json
+
+# 一次性生成脚本/中间产物（图标样张生成器等），不入库
+.tmp/
