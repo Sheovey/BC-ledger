@@ -49,7 +49,7 @@ import './index.scss';
  * 显示用版本号，**必须与微信后台上传的版本号一致**。
  * 提审时后台记录的版本来自 `cli upload -v`，界面这里读不到，只能手改同步。
  */
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 const CURRENCIES = ['¥', '$', '€', '£'];
 const MONTH_DAYS = [1, 5, 10, 15, 20, 25];
 
