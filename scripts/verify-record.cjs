@@ -82,25 +82,54 @@ async function tapText(page, selector, text) {
   })();
   console.log('首页本月支出基线:', expenseBeforeText, '\n');
 
-  // ---------- 1. TabBar ----------
-  const tabs = await page.$$('.tabbar__item');
-  const addBtn = await page.$('.tabbar__add');
-  check('首页渲染底部导航', tabs.length === 4 && Boolean(addBtn), `4 个 tab=${tabs.length}，记一笔=${Boolean(addBtn)}`);
+  // ---------- 1. 底部导航（自定义 tabBar） ----------
+  // tabBar 改成 custom: true 后，导航是**独立组件树**，page.$$ 看不到它的节点，
+  // 原来「数 .tabbar__item 个数」的断言必然拿到 0。因此改成分两层验：
+  //   静态层：四个页面确实声明为 tab 页、组件内路径与配置逐一对齐、切换用的是 switchTab；
+  //   行为层：switchTab 真能把四个页面切过去（能切过去本身就证明它们被当作 tab 页）。
+  // 「点击命中」那一层脚本覆盖不到，只能真机手点 —— 如实标注，不假装验过。
+  const APP_CFG = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.config.ts'), 'utf8');
+  const TAB_SRC = fs.readFileSync(path.join(__dirname, '..', 'src', 'custom-tab-bar', 'index.tsx'), 'utf8');
+  const TAB_PAGES = ['pages/home/index', 'pages/ledger/index', 'pages/stats/index', 'pages/settings/index'];
 
-  const tabTexts = [];
-  for (const t of tabs) tabTexts.push((await t.text()).trim());
-  check('Tab 文案正确', tabTexts.join('/') === '首页/流水/图表/我的', tabTexts.join('/'));
+  check('已启用自定义 tabBar', /custom:\s*true/.test(APP_CFG));
+  check(
+    '四个页面均声明为 tab 页',
+    TAB_PAGES.every((p) => APP_CFG.includes(`pagePath: '${p}'`)),
+    TAB_PAGES.filter((p) => !APP_CFG.includes(`pagePath: '${p}'`)).join(',') || '全部命中',
+  );
+  check(
+    'tab 组件路径与配置一致',
+    TAB_PAGES.every((p) => TAB_SRC.includes(`'/${p}'`)),
+    'custom-tab-bar/index.tsx',
+  );
+  // 只看真实调用（Taro.redirectTo( ），不能只 grep 词根 —— 注释里解释历史时
+  // 也会出现 redirectTo，那样断言会误报
+  check(
+    'tab 切换走 switchTab 而非 redirectTo',
+    /Taro\.switchTab\s*\(/.test(TAB_SRC) && !/Taro\.redirectTo\s*\(/.test(TAB_SRC),
+  );
 
-  if (!addBtn) {
-    await mp.disconnect();
-    process.exit(1);
+  let tabSwitchOk = 0;
+  for (const url of ['/pages/ledger/index', '/pages/stats/index', '/pages/settings/index', '/pages/home/index']) {
+    try {
+      await mp.switchTab(url);
+      await sleep(500);
+      const cur = await mp.currentPage();
+      if (cur.path === url.slice(1)) tabSwitchOk++;
+    } catch {
+      /* 漏计数由下面的断言暴露 */
+    }
   }
+  check('四个 tab 可切换', tabSwitchOk === 4, `${tabSwitchOk}/4`);
+  page = await mp.currentPage();
 
   // ---------- 2. 进入记账页 ----------
-  await addBtn.tap();
+  // 与组件内「记一笔」按钮走同一条调用（Taro.navigateTo）
+  await mp.navigateTo('/pages/record/index');
   await sleep(1000);
   page = await mp.currentPage();
-  check('点「记一笔」进入记账页', page.path.includes('pages/record/index'), page.path);
+  check('进入记账页', page.path.includes('pages/record/index'), page.path);
 
   const keys = await page.$$('.key');
   const fields = await page.$$('.record__field');

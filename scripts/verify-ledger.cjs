@@ -18,6 +18,7 @@
  * 7. 点流水行进编辑态、点右上角加号进记账页
  */
 const automator = require('miniprogram-automator');
+const { goTab } = require('./lib/nav.cjs');
 const path = require('path');
 const fs = require('fs');
 
@@ -135,7 +136,7 @@ const domMonths = async (page) => {
   await mp.reLaunch('/pages/home/index');
   await sleep(1500);
   let page = await mp.currentPage();
-  const entered = await tapText(page, '.tabbar__item', '流水');
+  const entered = await goTab(mp, '流水');
   check('底栏有「流水」入口', entered);
   page = await waitForPage(mp, 'pages/ledger/index');
   check('进入流水页', page.path.includes('pages/ledger/index'), page.path);

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
+import { useDidShow } from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
 import { Icon } from '@/components/Icon';
-import { TabBar } from '@/components/TabBar';
 import { TxRow, EmptyState } from '@/components/TxRow';
 import {
   buildCategoryMap,
@@ -12,6 +12,7 @@ import {
   visibleBooks,
 } from '@/store/selectors';
 import { useStore } from '@/store/useStore';
+import { useUiStore } from '@/store/ui';
 import { formatMoney } from '@/utils/money';
 import { resolveRange, todayStr } from '@/utils/date';
 import { navigate } from '@/router';
@@ -26,6 +27,11 @@ import './index.scss';
 export default function HomePage() {
   const data = useStore((s) => s.data);
   const updateSettings = useStore((s) => s.updateSettings);
+  const setActiveTab = useUiStore((s) => s.setActiveTab);
+
+  // 底部导航由框架渲染（custom-tab-bar），这里只负责告知当前是哪一页。
+  // switchTab 复用缓存页面时也会触发 onShow，所以从别的 tab 切回来高亮仍正确。
+  useDidShow(() => setActiveTab('home'));
 
   const book = getBook(data);
   const currency = data.settings.currency;
@@ -48,7 +54,6 @@ export default function HomePage() {
     return (
       <View className='shell'>
         <EmptyState title='还没有账本' description='先创建一个账本开始记账' />
-        <TabBar active='home' />
       </View>
     );
   }
@@ -252,8 +257,6 @@ export default function HomePage() {
           </View>
         )}
       </View>
-
-      <TabBar active='home' />
     </View>
   );
 }

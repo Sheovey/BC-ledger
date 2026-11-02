@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { View, Text } from '@tarojs/components';
-import Taro from '@tarojs/taro';
+import Taro, { useDidShow } from '@tarojs/taro';
 import { useStore, toast } from '@/store/useStore';
+import { useUiStore } from '@/store/ui';
 import { Icon } from '@/components/Icon';
-import { TabBar } from '@/components/TabBar';
 import { Sheet, ConfirmDialog } from '@/components/Sheet';
 import { useNavMetrics } from '@/hooks/useNavMetrics';
 import { getBook, summarize } from '@/store/selectors';
@@ -83,7 +83,11 @@ export default function SettingsPage() {
   const importData = useStore((s) => s.importData);
   const resetAll = useStore((s) => s.resetAll);
   const loadDemo = useStore((s) => s.loadDemo);
+  const setActiveTab = useUiStore((s) => s.setActiveTab);
   const nav = useNavMetrics();
+
+  // 告知底部导航当前是我的页（导航由框架渲染，见 src/custom-tab-bar）
+  useDidShow(() => setActiveTab('settings'));
 
   const book = getBook(data);
   const [sheet, setSheet] = useState<'currency' | 'monthDay' | null>(null);
@@ -411,8 +415,6 @@ export default function SettingsPage() {
       </View>
 
       <View className='settings-foot' />
-
-      <TabBar active='settings' />
 
       {sheet === 'currency' ? (
         <Sheet onClose={() => setSheet(null)} title='货币符号'>

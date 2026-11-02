@@ -1,10 +1,10 @@
 import { useDeferredValue, useMemo, useState } from 'react';
 import { View, Text, Input, Picker } from '@tarojs/components';
-import { useReachBottom } from '@tarojs/taro';
+import { useDidShow, useReachBottom } from '@tarojs/taro';
 import type { Tx, TxType } from '@/types';
 import { useStore } from '@/store/useStore';
+import { useUiStore } from '@/store/ui';
 import { Icon } from '@/components/Icon';
-import { TabBar } from '@/components/TabBar';
 import { TxRow, EmptyState } from '@/components/TxRow';
 import { Sheet } from '@/components/Sheet';
 import { useNavMetrics } from '@/hooks/useNavMetrics';
@@ -104,7 +104,11 @@ function groupByMonthDay(txs: Tx[]): MonthGroup[] {
 export default function LedgerPage() {
   const data = useStore((s) => s.data);
   const updateSettings = useStore((s) => s.updateSettings);
+  const setActiveTab = useUiStore((s) => s.setActiveTab);
   const nav = useNavMetrics();
+
+  // 告知底部导航当前是流水页（导航由框架渲染，见 src/custom-tab-bar）
+  useDidShow(() => setActiveTab('ledger'));
 
   const book = getBook(data);
   const [bookId, setBookId] = useState(book?.id ?? '');
@@ -402,8 +406,6 @@ export default function LedgerPage() {
           {hasMore ? `上拉加载更多 · 还有 ${remaining} 笔` : `已显示全部 ${filtered.length} 笔`}
         </View>
       ) : null}
-
-      <TabBar active='ledger' />
 
       {bookSheet ? (
         <Sheet onClose={() => setBookSheet(false)} title='切换账本'>

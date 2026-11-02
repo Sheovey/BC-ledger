@@ -16,6 +16,7 @@
  * 7. 存储占用不是「未知」
  */
 const automator = require('miniprogram-automator');
+const { goTab } = require('./lib/nav.cjs');
 const path = require('path');
 const fs = require('fs');
 
@@ -75,7 +76,7 @@ async function rowTexts(page) {
   await mp.reLaunch('/pages/home/index');
   await sleep(1500);
   let page = await mp.currentPage();
-  const entered = await tapText(page, '.tabbar__item', '我的');
+  const entered = await goTab(mp, '我的');
   check('底栏有「我的」入口', entered);
   page = await waitForPage(mp, 'pages/settings/index');
   check('进入设置页', page.path.includes('pages/settings/index'), page.path);

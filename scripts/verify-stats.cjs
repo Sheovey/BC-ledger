@@ -16,6 +16,7 @@
  * 7. 近 6 个月趋势有 6 根柱子
  */
 const automator = require('miniprogram-automator');
+const { goTab } = require('./lib/nav.cjs');
 const path = require('path');
 const fs = require('fs');
 
@@ -120,7 +121,7 @@ const count = async (page, selector) => (await page.$$(selector)).length;
   await mp.reLaunch('/pages/home/index');
   await sleep(1500);
   let page = await mp.currentPage();
-  const entered = await tapText(page, '.tabbar__item', '图表');
+  const entered = await goTab(mp, '图表');
   check('底栏有「图表」入口', entered);
   page = await waitForPage(mp, 'pages/stats/index');
   check('进入统计页', page.path.includes('pages/stats/index'), page.path);

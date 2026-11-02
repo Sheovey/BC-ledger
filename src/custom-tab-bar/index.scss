@@ -1,0 +1,20 @@
+/**
+ * 自定义 tabBar 的样式补丁。
+ *
+ * 这里只做一件事：把主题变量重新声明到组件根节点上。
+ * custom-tab-bar 是独立组件树，不在 page 节点内，所以 base.scss 里挂在
+ * page 上的 --surface / --accent / --text-3 等变量继承不到。
+ *
+ * 后果不是「有点偏差」而是整条声明失效：凡是 `var(...)` 参与的属性
+ * （背景渐变、边框色、文字色）全部被浏览器丢弃，只剩写死 rgba 的属性还在。
+ * 实测表现就是中间「记一笔」按钮变成透明胶囊 + 一圈橙色微光 + 看不见的白字，
+ * 四个 tab 文字全黑、选中项也没高亮。
+ *
+ * 视觉规则本身（.tabbar / .tabbar__item 等）仍定义在全局 components.scss，
+ * 靠组件上的 options.addGlobalClass 取到，这里不重复。
+ */
+@import '../styles/tokens';
+
+.tabbar {
+  @include theme-tokens;
+}

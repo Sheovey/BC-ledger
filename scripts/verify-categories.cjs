@@ -17,6 +17,7 @@
  * 9. 返回键回到设置页
  */
 const automator = require('miniprogram-automator');
+const { goTab } = require('./lib/nav.cjs');
 const path = require('path');
 const fs = require('fs');
 
@@ -91,7 +92,7 @@ const texts = async (page, selector) => {
   await mp.reLaunch('/pages/home/index');
   await sleep(1500);
   let page = await mp.currentPage();
-  await tapText(page, '.tabbar__item', '我的');
+  await goTab(mp, '我的');
   page = await waitForPage(mp, 'pages/settings/index');
 
   const entered = await tapText(page, '.settings-row', '分类管理');

@@ -77,6 +77,15 @@ export default function RecordPage() {
   const [occurredAt, setOccurredAt] = useState(existing?.occurredAt ?? nowStr());
   const [sheet, setSheet] = useState<SheetKind>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  /**
+   * 键盘是否展开。
+   *
+   * 键盘是自绘的、铺在页面 flex 底部，不会像系统输入法那样自动弹收，
+   * 一直占着屏幕下半部分。给一个把手能收起来，方便核对上半部分的表单内容。
+   * 收起后功能不缺：类型切换在页面上方还有一排，保存按钮在导航栏，
+   * 底部另有一条「继续输入」随时能展开。
+   */
+  const [keypadOpen, setKeypadOpen] = useState(true);
 
   const amount = useAmountInput({
     initial: existing ? fenToYuanString(existing.amount) : '',
@@ -337,13 +346,25 @@ export default function RecordPage() {
         <View className='record__tail' />
       </View>
 
-      <Keypad
-        confirmDisabled={type !== 'balance' && amount.resolveFen() <= 0}
-        onConfirm={save}
-        onPress={amount.press}
-        onTypeChange={switchType}
-        type={type}
-      />
+      {keypadOpen ? (
+        <Keypad
+          confirmDisabled={type !== 'balance' && amount.resolveFen() <= 0}
+          onConfirm={save}
+          onPress={amount.press}
+          onTypeChange={switchType}
+          onCollapse={() => setKeypadOpen(false)}
+          type={type}
+        />
+      ) : (
+        <View
+          className='keypad-reopen'
+          hoverClass='keypad-reopen--hover'
+          onClick={() => setKeypadOpen(true)}
+        >
+          <Icon name='edit' size={15} />
+          <Text className='keypad-reopen__label'>继续输入</Text>
+        </View>
+      )}
 
       {sheet === 'category' && (type === 'expense' || type === 'income') ? (
         <Sheet onClose={() => setSheet(null)} title='选择分类'>

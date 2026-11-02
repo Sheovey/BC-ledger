@@ -154,17 +154,12 @@ async function waitForPage(mp, keyword, timeout = 15000) {
   check('删除后条数 -1', afterDelete === start - 1, `${start} → ${afterDelete}`);
 
   // ---------- 3. 余额调整 ----------
-  // 回到首页后重新取一次 currentPage：navigateBack 之后旧的 page 句柄已失效，
-  // 在失效句柄上查 .tabbar__add 会拿到 null，表现为「点了没反应」的假故障。
+  // 底部导航已改为自定义 tabBar（tabBar.custom = true），它是独立组件树，
+  // page.$('.tabbar__add') 取不到节点，所以这里不再点击按钮，改用与按钮
+  // 相同的 Taro.navigateTo 进记账页。点击命中本身由真机验证。
   await sleep(1200);
   page = await mp.currentPage();
-  const addBtn = await page.$('.tabbar__add');
-  check('首页有记一笔入口', Boolean(addBtn));
-  if (!addBtn) {
-    await mp.disconnect();
-    process.exit(1);
-  }
-  await addBtn.tap();
+  await mp.navigateTo('/pages/record/index');
   page = await waitForPage(mp, 'pages/record');
 
   // 左侧类型列里点「余额」

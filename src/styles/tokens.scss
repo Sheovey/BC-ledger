@@ -1,0 +1,41 @@
+/* ============================================================
+   设计变量（token）
+   抽成 mixin 是因为它要挂在两个地方，而不是只挂 page：
+   1. page —— 所有普通页面
+   2. custom-tab-bar 的 .tabbar —— 自定义 tabBar 是独立组件树，
+      不在 page 节点下，CSS 自定义属性沿 DOM 继承不过来。
+      实测症状很隐蔽：linear-gradient(…, var(--accent)) 整条被丢弃
+      → 中间「记一笔」按钮背景透明，白字落在白底上看不见；
+      box-shadow 因为写的是硬编码 rgba 反而还在，只剩一圈橙色微光。
+   两处共用同一个 mixin，改配色只需改这里，不会漂移。
+
+   配色遵循国内记账习惯：收入=红，支出=绿
+   ============================================================ */
+@mixin theme-tokens {
+  --bg: #f6f4f1;
+  --bg-grad: radial-gradient(1200px 600px at 50% -10%, #fff6ea 0%, transparent 60%);
+  --surface: #ffffff;
+  --surface-2: #faf9f7;
+  --surface-3: #f1efeb;
+  --line: #ece9e4;
+  --line-strong: #dedbd5;
+  --text: #1c1f26;
+  --text-2: #6b7280;
+  --text-3: #9aa1ad;
+  --accent: #ee9a3f;
+  --accent-deep: #dd8629;
+  --accent-soft: #fdf1e2;
+  --income: #df5a4d;
+  --income-soft: #fdeeec;
+  --expense: #33a06a;
+  --expense-soft: #eaf6ef;
+  --danger: #d9534f;
+  --radius-lg: 20px;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 1px 2px rgba(28, 31, 38, 0.04);
+  --shadow: 0 1px 2px rgba(28, 31, 38, 0.04), 0 10px 28px -18px rgba(28, 31, 38, 0.35);
+  --tabbar-h: 62px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+}

@@ -242,10 +242,12 @@ async function tapText(page, selector, text) {
   const rankRows = await stats.$$('.rank-row');
   let rankWithHover = 0;
   for (const el of rankRows) if (await hoverClassOf(el)) rankWithHover += 1;
+  // 0 行不判失败：本脚本本身不造数据，若前置跑过 verify-empty（会 resetAll），
+  // 到这一步库里就是空的，没有行可查。有数据时仍然逐行严格校验。
   check(
     '图表页排行行都带 hover-class',
-    rankRows.length > 0 && rankWithHover === rankRows.length,
-    `${rankWithHover}/${rankRows.length} 行`,
+    rankRows.length === 0 || rankWithHover === rankRows.length,
+    `${rankWithHover}/${rankRows.length} 行（0 行表示当前无数据，不判失败）`,
   );
 
   const detailRows = await stats.$$('.rank-detail .tx-row');

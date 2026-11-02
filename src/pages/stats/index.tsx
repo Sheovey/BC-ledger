@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
+import { useDidShow } from '@tarojs/taro';
 import { View, Text } from '@tarojs/components';
 import type { DateRange, RangeKind, StatDimension } from '@/types';
 import { useStore } from '@/store/useStore';
+import { useUiStore } from '@/store/ui';
 import { Icon } from '@/components/Icon';
-import { TabBar } from '@/components/TabBar';
 import { DonutChart } from '@/components/DonutChart';
 import { EmptyState, TxRow } from '@/components/TxRow';
 import { useNavMetrics } from '@/hooks/useNavMetrics';
@@ -49,8 +50,12 @@ const RANGE_TABS: Array<{ key: RangeKind; label: string }> = [
 
 export default function StatsPage() {
   const data = useStore((s) => s.data);
+  const setActiveTab = useUiStore((s) => s.setActiveTab);
   const nav = useNavMetrics();
   const book = getBook(data);
+
+  // 告知底部导航当前是图表页（导航由框架渲染，见 src/custom-tab-bar）
+  useDidShow(() => setActiveTab('stats'));
 
   const [dimension, setDimension] = useState<StatDimension>('category');
   const [flow, setFlow] = useState<'expense' | 'income'>('expense');
@@ -134,7 +139,6 @@ export default function StatsPage() {
     return (
       <View className='shell'>
         <EmptyState description='请先创建账本' title='暂无数据' />
-        <TabBar active='stats' />
       </View>
     );
   }
@@ -388,8 +392,6 @@ export default function StatsPage() {
           </View>
         </View>
       </View>
-
-      <TabBar active='stats' />
     </View>
   );
 }

@@ -17,6 +17,7 @@
  * 6. 「区间」弹层能打开、能确认，标签变为短格式且筛选生效
  */
 const automator = require('miniprogram-automator');
+const { goTab } = require('./lib/nav.cjs');
 const path = require('path');
 const fs = require('fs');
 
@@ -133,7 +134,7 @@ const domRowCount = async (page) => (await page.$$('.tx-row')).length;
   await mp.reLaunch('/pages/home/index');
   await sleep(1500);
   let page = await mp.currentPage();
-  const entered = await tapText(page, '.tabbar__item', '流水');
+  const entered = await goTab(mp, '流水');
   check('底栏有「流水」入口', entered);
   page = await waitForPage(mp, 'pages/ledger/index');
   check('进入流水页', page.path.includes('pages/ledger/index'), page.path);

@@ -20,6 +20,7 @@
  * 9. 删除（硬删除）→ 列表 -1、库里不再有
  */
 const automator = require('miniprogram-automator');
+const { goTab } = require('./lib/nav.cjs');
 const path = require('path');
 const fs = require('fs');
 
@@ -74,7 +75,7 @@ async function gotoFromSettings(mp, rowLabel, pagePath) {
   await mp.reLaunch('/pages/home/index');
   await sleep(1500);
   let page = await mp.currentPage();
-  await tapText(page, '.tabbar__item', '我的');
+  await goTab(mp, '我的');
   page = await waitForPage(mp, 'pages/settings/index');
   const entered = await tapText(page, '.settings-row', rowLabel);
   page = await waitForPage(mp, pagePath);

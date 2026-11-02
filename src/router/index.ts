@@ -91,13 +91,18 @@ export function resetTo(route: Route): void {
 }
 
 /**
- * 替换当前页（用于底部 Tab 切换）。
- * Web 版 tab 之间是同一页面内的视图切换，小程序没有这层视图容器，
- * 用 redirectTo 而不是 reLaunch：只换当前这一页，页面栈不重建，切换更快。
+ * 切换底部 Tab。
+ *
+ * 必须用 switchTab：home / ledger / stats / settings 在 app.config 里声明为 tab 页，
+ * 对 tab 页调用 redirectTo / navigateTo 会直接失败。用 switchTab 的另一个好处是
+ * 页面常驻内存，切回来不重建（稳态 30~90ms；原先 redirectTo 重建整页 280~500ms，且逐轮递增）。
+ *
+ * 注意 switchTab 不接受 query 参数，这里四个 tab 路由本身都不带参，安全。
+ * 若将来某个 tab 需要传参，只能先 switchTab 再在页面里读 store，不能塞进 url。
  */
 export function replaceTo(route: Route): void {
   if (!guard(route)) return;
-  Taro.redirectTo({ url: routeToUrl(route) }).catch((error) => reportFail('redirectTo', error));
+  Taro.switchTab({ url: routeToUrl(route) }).catch((error) => reportFail('switchTab', error));
 }
 
 /**

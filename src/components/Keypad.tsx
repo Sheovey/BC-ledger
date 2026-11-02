@@ -9,6 +9,11 @@ interface KeypadProps {
   /** 左侧类型切换：支出/收入/转账/余额 */
   type: 'expense' | 'income' | 'transfer' | 'balance';
   onTypeChange?: (type: 'expense' | 'income' | 'transfer' | 'balance') => void;
+  /**
+   * 收起键盘。传了才渲染顶部把手 —— 把手是唯一的收起入口，
+   * 没有它就没有可发现的收起方式，因此不设默认值、由调用方决定。
+   */
+  onCollapse?: () => void;
 }
 
 const TYPE_ORDER: Array<KeypadProps['type']> = ['expense', 'income', 'transfer', 'balance'];
@@ -37,34 +42,52 @@ const KEYS: KeypadKey[] = [
   { kind: 'back' },
 ];
 
-export function Keypad({ onPress, onConfirm, confirmDisabled, type, onTypeChange }: KeypadProps) {
+export function Keypad({
+  onPress,
+  onConfirm,
+  confirmDisabled,
+  type,
+  onTypeChange,
+  onCollapse,
+}: KeypadProps) {
   return (
     <View className='keypad'>
-      <View className='keypad__types'>
-        {TYPE_ORDER.map((item) => (
-          <View
-            className={`keypad__type ${type === item ? 'keypad__type--active' : ''}`}
-            key={item}
-            onClick={() => onTypeChange?.(item)}
-          >
-            {TYPE_LABEL[item]}
-          </View>
-        ))}
-      </View>
-      <View className='keypad__grid'>
-        {KEYS.slice(0, 11).map((key, index) => (
-          <KeyButton key={index} keyDef={key} onPress={onPress} />
-        ))}
+      {onCollapse ? (
         <View
-          className={`key key--confirm ${confirmDisabled ? 'key--confirm-disabled' : ''}`}
-          hoverClass={confirmDisabled ? 'none' : 'key--hover'}
-          onClick={confirmDisabled ? undefined : onConfirm}
+          className='keypad__handle'
+          hoverClass='keypad__handle--hover'
+          onClick={onCollapse}
         >
-          <Text className='key__label'>确定</Text>
+          <View className='keypad__handle-bar' />
         </View>
-        {KEYS.slice(11).map((key, index) => (
-          <KeyButton key={`t${index}`} keyDef={key} onPress={onPress} />
-        ))}
+      ) : null}
+      <View className='keypad__body'>
+        <View className='keypad__types'>
+          {TYPE_ORDER.map((item) => (
+            <View
+              className={`keypad__type ${type === item ? 'keypad__type--active' : ''}`}
+              key={item}
+              onClick={() => onTypeChange?.(item)}
+            >
+              {TYPE_LABEL[item]}
+            </View>
+          ))}
+        </View>
+        <View className='keypad__grid'>
+          {KEYS.slice(0, 11).map((key, index) => (
+            <KeyButton key={index} keyDef={key} onPress={onPress} />
+          ))}
+          <View
+            className={`key key--confirm ${confirmDisabled ? 'key--confirm-disabled' : ''}`}
+            hoverClass={confirmDisabled ? 'none' : 'key--hover'}
+            onClick={confirmDisabled ? undefined : onConfirm}
+          >
+            <Text className='key__label'>确定</Text>
+          </View>
+          {KEYS.slice(11).map((key, index) => (
+            <KeyButton key={`t${index}`} keyDef={key} onPress={onPress} />
+          ))}
+        </View>
       </View>
     </View>
   );

@@ -19,6 +19,7 @@
  * 说明：只清理由本脚本写入的两条预算（总预算 + 餐饮），不动其它分类预算。
  */
 const automator = require('miniprogram-automator');
+const { goTab } = require('./lib/nav.cjs');
 const path = require('path');
 const fs = require('fs');
 
@@ -96,7 +97,7 @@ async function clearBudgets(mp) {
   await mp.reLaunch('/pages/home/index');
   await sleep(1500);
   let page = await mp.currentPage();
-  await tapText(page, '.tabbar__item', '我的');
+  await goTab(mp, '我的');
   page = await waitForPage(mp, 'pages/settings/index');
 
   const entered = await tapText(page, '.settings-row', '预算');

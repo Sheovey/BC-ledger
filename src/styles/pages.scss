@@ -530,10 +530,63 @@
 /* 数字键盘 */
 .keypad {
   display: flex;
-  gap: 8px;
-  padding: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+  flex-direction: column;
+  padding: 0 10px calc(10px + env(safe-area-inset-bottom, 0px));
   background: var(--surface);
   border-top: 1px solid var(--line);
+}
+
+/* 顶部把手：键盘唯一的收起入口。
+   22px 是「够点但不占地方」的折中 —— 再矮点不准，再高点白占一屏。
+   短横线本身只有 4px，热区靠外层容器撑满整宽。 */
+.keypad__handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+.keypad__handle-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  /* 用 --text-3 而不是 --line-strong：后者 #dedbd5 在白底上实测几乎看不见，
+     把手是唯一收起入口，看不清等于没做。 */
+  background: var(--text-3);
+  transition: background 0.16s ease;
+}
+
+.keypad__handle--hover .keypad__handle-bar {
+  background: var(--text-2);
+}
+
+.keypad__body {
+  display: flex;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+/* 键盘收起后的重开条。高度与把手一起构成「收起/展开」的一对，
+   放在原来键盘的位置，避免收起后底部留一块空白让人以为页面坏了。 */
+.keypad-reopen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 46px;
+  flex: 0 0 auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: content-box;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--text-2);
+  transition: background 0.16s ease;
+}
+
+.keypad-reopen--hover {
+  background: var(--surface-2);
 }
 
 .keypad__types {
