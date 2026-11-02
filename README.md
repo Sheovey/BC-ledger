@@ -68,7 +68,7 @@ npm run dev
 
 ### 端到端验收
 
-项目自带 16 套验收脚本（共 394 项断言），通过 `miniprogram-automator` 直接驱动真实的微信运行时。
+项目自带 17 套验收脚本（共 413 项断言），通过 `miniprogram-automator` 直接驱动真实的微信运行时。
 
 ```bash
 # 必须和 auto 串在同一条命令里：auto 结束端口即释放
@@ -89,6 +89,7 @@ timeout 120 npm run auto >/dev/null 2>&1 && node scripts/verify-ledger.cjs
 | `verify-stats` | 图表聚合、排行、明细展开与折叠 |
 | `verify-accounts` / `verify-categories` / `verify-books` / `verify-budget` / `verify-manage` | 各管理页增删改 |
 | `verify-settings` / `verify-backup` / `verify-archive` | 设置项、备份恢复、xlsx 存档 |
+| `verify-sheet` | 弹窗/弹层布局与间距；共享组件的类不许只定义在页面级样式里 |
 | `verify-hover` | 静态守卫：产物与源码不允许出现 `:hover` / `:active` |
 
 另有 `npm run typecheck`（`tsc --noEmit`）作为提交前必过项。
@@ -104,7 +105,8 @@ src/
 │   ├── stats/        # 统计图表
 │   ├── settings/     # 我的
 │   └── accounts/ categories/ books/ budget/ projects/ templates/
-├── components/       # Keypad / Sheet / TabBar / DonutChart / TxRow / Icon …
+├── components/       # Keypad / Sheet / DonutChart / TxRow / Icon …
+├── custom-tab-bar/   # 底部导航（tabBar.custom = true，页面常驻不重建）
 ├── db/
 │   ├── storage.ts    # 存储驱动：wx.setStorageSync + 分片（300 条/片）
 │   ├── persist.ts    # 反序列化、迁移、备份轮转
@@ -116,7 +118,7 @@ src/
 ├── store/            # Zustand store 与 selector
 ├── hooks/            # useAmountInput / useProgressiveList / useNavMetrics
 ├── utils/            # 日期、金额、id
-└── styles/           # 全局变量与页面公共样式
+└── styles/           # 主题变量 tokens.scss、全局与页面公共样式
 
 scripts/              # 验收脚本、截图工具、微信 CLI 包装
 docs/screenshots/     # README 用图
@@ -150,6 +152,10 @@ docs/screenshots/     # README 用图
 踩过的坑，留在这里免得再犯：
 
 - **移动端禁用 `:hover` / `:active`**。触摸设备上 `:hover` 松手不解除，是「点过一行就一直发灰」的根因。一律用 `hoverClass` 挂 `--hover` 类；`<Text>` 不支持 `hover-class`，需要按下的元素用 `<View>`。有 `verify-hover` 双向守卫。
+- **底部 tab 必须声明为 tabBar，不能靠页面内自绘导航**。不声明时四个 tab 只是普通页面，只能用 `redirectTo` 切换，语义是「销毁当前页 + 新建目标页」——每点一次重建整页，实测 280~500ms、峰值 3s，且反复重建会让耗时逐轮递增（越用越卡）。声明 `tabBar.custom = true` 后它们才是真 tab 页，切换走 `switchTab`，页面常驻，稳态 30~90ms。视觉仍由 `src/custom-tab-bar/` 自绘，中间凸起的「记一笔」得以保留。
+  - **custom-tab-bar 是独立组件树，不在 `page` 节点下**，`base.scss` 挂在 `page` 上的 CSS 自定义属性继承不过来。后果不是「略有偏差」而是整条 `var()` 声明被丢弃：渐变背景失效、白字落在白底上看不见，而写死 rgba 的 `box-shadow` 还在，只剩一圈微光。变量统一放 `styles/tokens.scss`，在 `.tabbar` 上再声明一次。
+  - 每个 tab 页各有一个 tabBar 实例、状态不共享，高亮只能读公共信源（`store/ui.ts`），由各页 `useDidShow` 写入。
+  - 该组件树对 `miniprogram-automator` 的 `page.$` 不可见，验收脚本切 tab 一律用 `scripts/lib/nav.cjs` 的 `goTab`（走 `switchTab`），不要再用点 DOM 的方式。
 - **选中态与按下态必须视觉可分**。全站选中态用 `accent-soft` 底 + `accent-deep` 字，禁止拿 `surface-2` 当选中底色——它和按下态同色。
 - **不留「点了才说没做」的占位入口**。审核会记「功能不完整」，且不调对应 API 就能少一项隐私声明。要么做完，要么不留入口。
 - **版本号有三个手动位置，彼此无自动关联**：`src/pages/settings/index.tsx` 的 `APP_VERSION`（「关于」里显示的那个）、`package.json` 的 `version`、以及 `cli upload -v` 的参数。三处要一起改，漏了就会出现「界面显示 1.1.0、后台记录 1.1.1」这种对不上的情况。
