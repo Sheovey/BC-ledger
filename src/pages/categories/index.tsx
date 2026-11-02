@@ -186,10 +186,10 @@ export default function CategoriesPage() {
                 </View>
 
                 {expanded === root.id ? (
-                  <View className='cat-sub'>
+                  <View className='cat-sub-panel'>
                     <View className='cat-chips'>
                       {root.children.length === 0 ? (
-                        <Text className='cat-sub__empty'>暂无子分类</Text>
+                        <Text className='cat-sub-panel__empty'>暂无子分类</Text>
                       ) : (
                         root.children.map((child) => (
                           <View className='chip cat-chip' key={child.id}>

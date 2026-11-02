@@ -258,6 +258,10 @@ const domMonths = async (page) => {
   }
 
   // ---------- 10. 右上角加号 ----------
+  // reLaunch 紧跟在 tap 之后会偶发 'timeout waiting for automator response'：
+  // 目标页刚渲染完还有异步任务（存档调度、动画）在跑，reLaunch 与之打架。
+  // 加一段缓冲给渲染收尾，属于脚本健壮性修复，不是功能让步。
+  await sleep(800);
   await mp.reLaunch('/pages/ledger/index');
   await sleep(1500);
   page = await mp.currentPage();
@@ -273,6 +277,7 @@ const domMonths = async (page) => {
   }
 
   // ---------- 截图 ----------
+  await sleep(800);
   await mp.reLaunch('/pages/ledger/index');
   await sleep(1500);
   try {

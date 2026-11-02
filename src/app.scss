@@ -74,9 +74,16 @@
 
    这里只补「靠 button 默认行为居中」的那几个类；
    本身已经写了 flex 居中的（.btn / .icon-btn / .chip / .cat-item）不用管。
+
+   2026-11-02 补充：.record__type 与 .keypad__type 当初漏在这一批之外
+   （.record__type 来自 Web 版原样搬迁，Web 上它内部是 <button>；
+   .keypad__type 是小程序新写的，照抄了前者的写法）。表现为记一笔页
+   顶部四个类型标签、以及键盘左侧竖排四个类型，文字贴顶、下方留白偏大。
    ============================================================ */
 .segmented__item,
-.cat-sub {
+.cat-sub,
+.record__type,
+.keypad__type {
   display: flex;
   align-items: center;
   justify-content: center;

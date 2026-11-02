@@ -130,7 +130,9 @@
 
 .time-sheet__cell {
   flex: 1;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .time-sheet__row .time-sheet__cell + .time-sheet__cell,

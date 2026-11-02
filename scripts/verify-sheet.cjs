@@ -14,10 +14,11 @@
  *   R4  `.sheet` 不许自己再加 `padding-bottom: env(...)`：安全区只由 `.sheet__body`
  *       留一次，两处叠加会让弹层底部凭空多出 30 多 px 空白。
  *   R5  通用规则：被 ≥2 个文件使用的类，不许只定义在页面级 scss（防下一个共享组件重犯）。
+ *   R5b 对齐补丁：所有「固定高度 + 背景 + 纯文字」的类必须在 app.scss 的居中补丁清单里。
  *   R6  运行时：真的点开「清空所有数据」，确认弹窗结构完整并截图。
  *
  * 前提：已执行 taro build；运行时部分还需要 cli auto 已开（9420 端口）。
- * 静态部分（R1~R5）即使连不上自动化也会先跑完。
+ * 静态部分（R1~R5b）即使连不上自动化也会先跑完。
  */
 const path = require('path');
 const fs = require('fs');
@@ -159,6 +160,31 @@ check(
   'R5 没有「多页共用却只定义在页面级」的类',
   violations.length === 0,
   violations.length ? violations.slice(0, 6).join('、') : '符合',
+);
+
+/* ---------- R5b 文字容器的垂直居中补丁 ----------
+   小程序里 <View> 不是行内元素，没有浏览器给 <button> 的默认居中。
+   凡「固定高度 + 圆角背景 + 纯文字」的类都必须显式 flex 居中，否则文字
+   贴顶、下方留白偏大。这个坑重现过两次：先修了 segmented__item / cat-sub，
+   记一笔的 record__type 与键盘的 keypad__type 又漏了（2026-11-02 补上）。
+   这里锁死清单：谁把某条从补丁里删掉，这条断言就红。 */
+const appScss = fs.readFileSync(path.join(SRC, 'app.scss'), 'utf8');
+const patchStart = appScss.indexOf('.segmented__item');
+const patchBrace = patchStart >= 0 ? appScss.indexOf('{', patchStart) : -1;
+const patchEnd = patchBrace >= 0 ? appScss.indexOf('}', patchBrace) : -1;
+const patchSel = patchStart >= 0 ? appScss.slice(patchStart, patchBrace) : '';
+const patchBody = patchBrace >= 0 ? appScss.slice(patchBrace + 1, patchEnd) : '';
+const mustCenter = ['segmented__item', 'cat-sub', 'record__type', 'keypad__type'];
+const missingCenter = mustCenter.filter((c) => !patchSel.includes(`.${c}`));
+check(
+  'R5b 对齐补丁覆盖全部文字容器类',
+  missingCenter.length === 0,
+  missingCenter.length ? `缺 ${missingCenter.join('、')}` : `${mustCenter.length}/${mustCenter.length}`,
+);
+check(
+  'R5b 补丁内容含 flex + align-items: center',
+  patchBody.includes('display: flex') && patchBody.includes('align-items: center'),
+  patchBody.replace(/\s+/g, ' ').trim().slice(0, 70),
 );
 
 /* ---------- R6 运行时 ---------- */
