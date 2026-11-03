@@ -119,7 +119,8 @@ async function tapText(page, selector, text) {
   );
   check(
     '光标只在键盘展开时渲染',
-    /\{keypadOpen\s*\?\s*<View className='record__amount-caret'\s*\/>\s*:\s*null\}/.test(RECORD_SRC),
+    /\{keypadOpen && !amount\.text \? <View className='record__amount-caret' \/> : null\}/.test(RECORD_SRC) &&
+      /\{keypadOpen && amount\.text \? <View className='record__amount-caret' \/> : null\}/.test(RECORD_SRC),
   );
 
   let tabSwitchOk = 0;
@@ -152,6 +153,25 @@ async function tapText(page, selector, text) {
   check('金额区有输入光标', (await page.$$('.record__amount-caret')).length === 1);
   check('光标紧跟金额文本', (await page.$$('.record__amount-line .record__amount-caret')).length === 1);
 
+  // 空金额时光标要贴在占位符 0.00 的左侧（真实输入框语义：还没输入，光标在最前）
+  // automator 的元素只有 offset()/size()，没有 boundingBox()，位置一律用 offset().left 比。
+  const boxOf = async (el) => {
+    if (!el) return null;
+    try {
+      const [o, s] = await Promise.all([el.offset(), el.size()]);
+      return { left: o.left, width: s.width };
+    } catch {
+      return null;
+    }
+  };
+  const caretBox0 = await boxOf(await page.$('.record__amount-caret'));
+  const emptyBox = await boxOf(await page.$('.record__amount'));
+  check(
+    '空金额时光标在最前',
+    !!(caretBox0 && emptyBox && caretBox0.left < emptyBox.left),
+    caretBox0 && emptyBox ? `光标 x=${Math.round(caretBox0.left)}，文本 x=${Math.round(emptyBox.left)}` : '取不到位置',
+  );
+
   // ---------- 3. 输入金额 12.5 ----------
   await tapText(page, '.key', '1');
   await tapText(page, '.key', '2');
@@ -161,6 +181,17 @@ async function tapText(page, selector, text) {
   let amountEl = await page.$('.record__amount');
   const amountText = amountEl ? (await amountEl.text()).trim() : '';
   check('键盘输入金额', amountText === '12.5', `显示 ${amountText}`);
+
+  // 有内容后光标要跟到数字末尾（不能还赖在最左）
+  const filledBox = await boxOf(await page.$('.record__amount'));
+  const caretBox1 = await boxOf(await page.$('.record__amount-caret'));
+  check(
+    '光标随内容后移',
+    !!(caretBox1 && filledBox && caretBox1.left >= filledBox.left + filledBox.width - 2),
+    caretBox1 && filledBox
+      ? `光标 x=${Math.round(caretBox1.left)}，文本右缘=${Math.round(filledBox.left + filledBox.width)}`
+      : '取不到位置',
+  );
 
   // ---------- 4. 选分类 ----------
   await fields[0].tap();

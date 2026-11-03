@@ -253,11 +253,14 @@ export default function RecordPage() {
         <View className='record__amount-box' onClick={() => setKeypadOpen(true)}>
           <Text className='record__currency'>{data.settings.currency}</Text>
           <View className='record__amount-line'>
+            {/* 光标只在键盘展开（可输入）时出现，让「现在正在往这里输入」这件事看得见。
+                没有数字时贴着最左（占位 0.00 的左侧），敲下第一个数字后才随内容往后走——
+                与真实输入框一致；否则光标会停在占位符 0.00 后面，看着像已经输了 4 个字符。 */}
+            {keypadOpen && !amount.text ? <View className='record__amount-caret' /> : null}
             <Text className={`record__amount ${amount.text ? '' : 'record__amount--placeholder'}`}>
               {amount.display}
             </Text>
-            {/* 光标只在键盘展开（可输入）时出现，让「现在正在往这里输入」这件事看得见 */}
-            {keypadOpen ? <View className='record__amount-caret' /> : null}
+            {keypadOpen && amount.text ? <View className='record__amount-caret' /> : null}
           </View>
         </View>
         {amount.expression ? <View className='record__hint'>{amount.expression}</View> : null}
