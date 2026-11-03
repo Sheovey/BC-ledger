@@ -19,8 +19,11 @@ import './index.scss';
  * 2. 样式类 .tabbar 定义在全局 components.scss 里，因此下方必须声明
  *    options.addGlobalClass，否则组件样式隔离会让它取不到、渲染成无样式的竖排文字。
  * 3. 不要换成 cover-view：本项目图标是 <View> + CSS mask，cover-view 里放不了 View。
- *    代价是普通 view 的层级不如 cover-view 稳，但弹层（z-index 100）能正常盖住它，
- *    反而更符合预期。
+ *    但普通 view 的层级**盖不过弹层，也躲不开弹层**——见第 4 点。
+ * 4. ⚠️ 框架把这个组件渲染在页面之上，**页面内的 z-index 管不到它**。
+ *    实测 `.overlay`（z-index: 100）依然被本组件（z-index: 30）压住，
+ *    导致「切换账本」弹层的账本行被导航栏挡住、点不到。
+ *    因此弹层打开期间必须主动隐藏本组件（读 useUiStore.sheetDepth）。
  */
 
 const TABS: { key: TabKey; label: string; icon: IconName; path: string }[] = [
@@ -32,6 +35,8 @@ const TABS: { key: TabKey; label: string; icon: IconName; path: string }[] = [
 
 function CustomTabBar() {
   const active = useUiStore((s) => s.activeTab);
+  // 有弹层打开时让位，否则会压住弹层底部内容（详见文件头第 4 点）
+  const hidden = useUiStore((s) => s.sheetDepth > 0);
 
   const item = (tab: (typeof TABS)[number]) => (
     <View
@@ -52,7 +57,7 @@ function CustomTabBar() {
   );
 
   return (
-    <View className='tabbar'>
+    <View className={`tabbar ${hidden ? 'tabbar--hidden' : ''}`}>
       {item(TABS[0])}
       {item(TABS[1])}
       <View

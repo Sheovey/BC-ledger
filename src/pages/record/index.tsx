@@ -250,11 +250,15 @@ export default function RecordPage() {
       </View>
 
       <View className='record__scroll'>
-        <View className='record__amount-box'>
+        <View className='record__amount-box' onClick={() => setKeypadOpen(true)}>
           <Text className='record__currency'>{data.settings.currency}</Text>
-          <Text className={`record__amount ${amount.text ? '' : 'record__amount--placeholder'}`}>
-            {amount.display}
-          </Text>
+          <View className='record__amount-line'>
+            <Text className={`record__amount ${amount.text ? '' : 'record__amount--placeholder'}`}>
+              {amount.display}
+            </Text>
+            {/* 光标只在键盘展开（可输入）时出现，让「现在正在往这里输入」这件事看得见 */}
+            {keypadOpen ? <View className='record__amount-caret' /> : null}
+          </View>
         </View>
         {amount.expression ? <View className='record__hint'>{amount.expression}</View> : null}
         {balanceHint ? (

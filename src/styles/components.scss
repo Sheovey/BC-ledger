@@ -333,6 +333,13 @@
   border-top: 1px solid var(--line);
 }
 
+/* 弹层打开时让位。见 store/ui.ts 的 sheetDepth 与 custom-tab-bar 文件头第 4 点：
+   框架把 tabBar 渲染在页面之上，页面内的 z-index 盖不住它，
+   弹层（z-index 100）会被它压住底部内容。隐藏是唯一可靠办法。 */
+.tabbar--hidden {
+  display: none;
+}
+
 .tabbar__item {
   flex: 1;
   display: flex;

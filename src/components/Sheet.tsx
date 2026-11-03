@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { View } from '@tarojs/components';
 import { Icon } from './Icon';
+import { useUiStore } from '@/store/ui';
 
 /**
  * 底部弹层（小程序版）。
@@ -20,6 +21,16 @@ interface SheetProps {
 }
 
 export function Sheet({ title, onClose, children, footer }: SheetProps) {
+  const openSheet = useUiStore((s) => s.openSheet);
+  const closeSheet = useUiStore((s) => s.closeSheet);
+
+  // 弹层打开期间让自定义 tabBar 消失：它由框架渲染在页面之上，
+  // 页面内的 z-index 盖不住它，不隐藏就会压住弹层底部（账本列表被挡死）。
+  useEffect(() => {
+    openSheet();
+    return closeSheet;
+  }, [openSheet, closeSheet]);
+
   return (
     <View className='overlay' onClick={onClose}>
       <View

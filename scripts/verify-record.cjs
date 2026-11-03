@@ -110,6 +110,18 @@ async function tapText(page, selector, text) {
     /Taro\.switchTab\s*\(/.test(TAB_SRC) && !/Taro\.redirectTo\s*\(/.test(TAB_SRC),
   );
 
+  // 金额区的两个交互：点它要能展开键盘、展开时要有光标。
+  // 都只看真实渲染调用，避免注释里提到关键字造成误报。
+  const RECORD_SRC = fs.readFileSync(path.join(__dirname, '..', 'src', 'pages', 'record', 'index.tsx'), 'utf8');
+  check(
+    '点金额区会展开键盘',
+    /record__amount-box'[^>]*onClick=\{\(\)\s*=>\s*setKeypadOpen\(true\)\}/.test(RECORD_SRC),
+  );
+  check(
+    '光标只在键盘展开时渲染',
+    /\{keypadOpen\s*\?\s*<View className='record__amount-caret'\s*\/>\s*:\s*null\}/.test(RECORD_SRC),
+  );
+
   let tabSwitchOk = 0;
   for (const url of ['/pages/ledger/index', '/pages/stats/index', '/pages/settings/index', '/pages/home/index']) {
     try {
@@ -134,6 +146,11 @@ async function tapText(page, selector, text) {
   const keys = await page.$$('.key');
   const fields = await page.$$('.record__field');
   check('键盘与表单渲染', keys.length === 15 && fields.length >= 3, `键=${keys.length}，字段=${fields.length}`);
+
+  // 金额区要有「正在输入」的光标：小程序没有真实 input，用一条闪烁竖线表达。
+  // 这不是装饰——没有它用户不知道自己输入的东西落在哪。
+  check('金额区有输入光标', (await page.$$('.record__amount-caret')).length === 1);
+  check('光标紧跟金额文本', (await page.$$('.record__amount-line .record__amount-caret')).length === 1);
 
   // ---------- 3. 输入金额 12.5 ----------
   await tapText(page, '.key', '1');

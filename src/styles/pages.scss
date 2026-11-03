@@ -452,14 +452,44 @@
   gap: 8px;
 }
 
-.record__amount {
+/* 金额与光标同一行。光标必须紧跟数字末尾，所以不能让它被 flex:1 的文本顶到最右侧 */
+.record__amount-line {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.record__amount {
+  min-width: 0;
   font-size: 46px;
   font-weight: 600;
   letter-spacing: -1.6px;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
   word-break: break-all;
+}
+
+/* 输入光标：小程序没有真实 input，用一条闪烁竖线表达「正在输入」 */
+.record__amount-caret {
+  flex: 0 0 auto;
+  width: 2px;
+  height: 34px;
+  border-radius: 2px;
+  background: var(--accent-deep);
+  animation: caret-blink 1.06s steps(1, end) infinite;
+}
+
+@keyframes caret-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  45.01%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .record__amount--placeholder {

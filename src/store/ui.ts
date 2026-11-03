@@ -18,9 +18,27 @@ export type TabKey = 'home' | 'ledger' | 'stats' | 'settings';
 interface UiState {
   activeTab: TabKey;
   setActiveTab: (key: TabKey) => void;
+  /**
+   * 当前已打开的底部弹层数量。
+   *
+   * 存在的唯一原因：custom-tab-bar 由框架渲染在页面之上，**页面内的 z-index 管不到它**
+   * （实测 `.overlay` 的 z-index:100 依然被 `.tabbar` 的 30 盖住，因为两者不在同一层叠上下文）。
+   * 结果是「切换账本」这类弹层被导航栏压住，账本行看不见也点不到。
+   * 弹层打开期间把 tabBar 隐藏，是唯一可靠让位的办法。
+   *
+   * 用计数而不是布尔：Sheet 可以嵌套（弹层里再开确认框），
+   * 布尔会在内层关闭时过早恢复，把外层的弹层又露出来。
+   */
+  sheetDepth: number;
+  openSheet: () => void;
+  closeSheet: () => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
   activeTab: 'home',
   setActiveTab: (key) => set((prev) => (prev.activeTab === key ? prev : { activeTab: key })),
+  sheetDepth: 0,
+  openSheet: () => set((prev) => ({ sheetDepth: prev.sheetDepth + 1 })),
+  closeSheet: () => set((prev) => ({ sheetDepth: Math.max(0, prev.sheetDepth - 1) })),
 }));
+

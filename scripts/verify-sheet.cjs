@@ -15,10 +15,11 @@
  *       留一次，两处叠加会让弹层底部凭空多出 30 多 px 空白。
  *   R5  通用规则：被 ≥2 个文件使用的类，不许只定义在页面级 scss（防下一个共享组件重犯）。
  *   R5b 对齐补丁：所有「固定高度 + 背景 + 纯文字」的类必须在 app.scss 的居中补丁清单里。
+ *   R5c 弹层打开时必须让自定义 tabBar 让位（框架渲染在页面之上，z-index 盖不住它）。
  *   R6  运行时：真的点开「清空所有数据」，确认弹窗结构完整并截图。
  *
  * 前提：已执行 taro build；运行时部分还需要 cli auto 已开（9420 端口）。
- * 静态部分（R1~R5b）即使连不上自动化也会先跑完。
+ * 静态部分（R1~R5c）即使连不上自动化也会先跑完。
  */
 const path = require('path');
 const fs = require('fs');
@@ -185,6 +186,34 @@ check(
   'R5b 补丁内容含 flex + align-items: center',
   patchBody.includes('display: flex') && patchBody.includes('align-items: center'),
   patchBody.replace(/\s+/g, ' ').trim().slice(0, 70),
+);
+
+/* ---------- R5c 弹层必须让 tabBar 让位 ----------
+   自定义 tabBar 由框架渲染在页面之上，页面内的 z-index 盖不住它：
+   2026-11-03 实测「切换账本」弹层的账本行被导航栏压住，看不见也点不到。
+   修法是弹层打开时按 sheetDepth 隐藏 tabBar。三处缺一不可，缺了就是静默故障
+   （弹层还在，只是底下几行点不动，很难联想到导航栏）。 */
+const sheetSrc = fs.readFileSync(path.join(SRC, 'components/Sheet.tsx'), 'utf8');
+const uiSrc = fs.readFileSync(path.join(SRC, 'store/ui.ts'), 'utf8');
+const tabbarSrc = fs.readFileSync(path.join(SRC, 'custom-tab-bar/index.tsx'), 'utf8');
+const cssSrc = fs.readFileSync(path.join(SRC, 'styles/components.scss'), 'utf8');
+
+const depthTriplet = [
+  ['Sheet.tsx 打开时登记', /openSheet\s*\(\s*\)/.test(sheetSrc)],
+  ['Sheet.tsx 关闭时解登记', /return\s+closeSheet/.test(sheetSrc)],
+  ['custom-tab-bar 读 sheetDepth', /sheetDepth\s*>\s*0/.test(tabbarSrc)],
+  ['.tabbar--hidden 有 display:none', /\.tabbar--hidden\s*\{[^}]*display:\s*none/.test(cssSrc)],
+];
+const depthBroken = depthTriplet.filter(([, ok]) => !ok).map(([name]) => name);
+check(
+  'R5c 弹层让 tabBar 让位（四处齐全）',
+  depthBroken.length === 0,
+  depthBroken.length ? `缺 ${depthBroken.join('、')}` : '齐全',
+);
+check(
+  'R5c sheetDepth 用计数而非布尔',
+  /sheetDepth:\s*number/.test(uiSrc) && /prev\.sheetDepth\s*\+\s*1/.test(uiSrc),
+  /Math\.max\(0,\s*prev\.sheetDepth\s*-\s*1\)/.test(uiSrc) ? '计数 + 防负' : '计数实现异常',
 );
 
 /* ---------- R6 运行时 ---------- */
