@@ -19,6 +19,7 @@
     "dev": "npm run dev:weapp",
     "ide": "node scripts/wxcli.cjs open",
     "auto": "node scripts/wxcli.cjs auto --auto-port 9420",
+    "upload": "node scripts/upload.cjs",
     "save": "node scripts/save.cjs",
     "log": "git log --oneline --decorate --max-count=15",
     "tag": "git tag -n1 --sort=-creatordate"
