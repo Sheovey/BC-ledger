@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { parseAmountToFen } from '@/utils/money';
+import { fenToYuanString, parseAmountToFen } from '@/utils/money';
 
 export type KeypadKey =
   | { kind: 'digit'; value: string }
@@ -92,12 +92,37 @@ export function useAmountInput({ initial = '' }: Options = {}) {
 
   const expression = useMemo(() => {
     if (accumulator === null || !operator) return '';
-    return `${(accumulator / 100).toFixed(2)} ${operator}`;
-  }, [accumulator, operator]);
+    const left = fenToYuanString(accumulator);
+    const current = parseAmountToFen(text);
+    // 还没敲第二个数时只写「12.50 +」；敲了就把整个算式写全并补等号，
+    // 等号是给用户看的信号：大号那串数字是结果，不是正在输入的操作数
+    if (current === null) return `${left} ${operator}`;
+    return `${left} ${operator} ${fenToYuanString(current)} =`;
+  }, [accumulator, operator, text]);
+
+  /**
+   * 有运算符挂起时，大号数字显示「当前合计」，而不是刚敲的这个操作数。
+   * 多笔累加（12.5 + 3.2）原来把第一个数藏在下方小字里、把第二个数放大，
+   * 用户看不到总数；改成大号位放合计、小字位放完整算式。
+   */
+  const totalFen = useMemo(() => {
+    if (accumulator === null || !operator) return null;
+    const current = parseAmountToFen(text || '0') ?? 0;
+    return operator === '+' ? accumulator + current : accumulator - current;
+  }, [accumulator, operator, text]);
+
+  const display = useMemo(
+    () => (totalFen === null ? text || '0.00' : fenToYuanString(totalFen)),
+    [totalFen, text],
+  );
+
+  /** 只有「既没输入、也没有算式」才算灰色占位；合计是真实数值，不能变灰 */
+  const placeholder = totalFen === null && text === '';
 
   return {
     text,
-    display: text || '0.00',
+    display,
+    placeholder,
     valueFen,
     press,
     resolveFen,

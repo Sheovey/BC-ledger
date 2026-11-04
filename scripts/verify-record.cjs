@@ -119,8 +119,8 @@ async function tapText(page, selector, text) {
   );
   check(
     '光标只在键盘展开时渲染',
-    /\{keypadOpen && !amount\.text \? <View className='record__amount-caret' \/> : null\}/.test(RECORD_SRC) &&
-      /\{keypadOpen && amount\.text \? <View className='record__amount-caret' \/> : null\}/.test(RECORD_SRC),
+    /\{keypadOpen && !amount\.text && !amount\.expression \? <View className='record__amount-caret' \/> : null\}/.test(RECORD_SRC) &&
+      /\{keypadOpen && \(amount\.text \|\| amount\.expression\) \? <View className='record__amount-caret' \/> : null\}/.test(RECORD_SRC),
   );
 
   let tabSwitchOk = 0;
@@ -240,6 +240,45 @@ async function tapText(page, selector, text) {
   const expenseText = statValues.length ? (await statValues[0].text()).trim() : '';
   const expected = (Number(expenseBeforeText.replace(/[^\d.-]/g, '')) + 12.5).toFixed(2);
   check('首页本月支出已刷新', expenseText === expected, `页面 ${expenseText} / 期望 ${expected}`);
+
+  // ---------- 7. 多笔合计：大号位显示合计，小字位显示算式 ----------
+  // 原来大号位是「刚敲的操作数」，第一个数藏在下面小字里，用户看不到总数。
+  await sleep(800);
+  await mp.navigateTo('/pages/record/index');
+  await sleep(1200);
+  page = await mp.currentPage();
+  const tapSeq = async (seq) => {
+    for (const ch of seq) {
+      await tapText(page, '.key', ch);
+      await sleep(120);
+    }
+  };
+  await tapSeq('12.5');
+  await tapSeq('+');
+  await sleep(200);
+  let amtEl = await page.$('.record__amount');
+  let hintEl = await page.$('.record__hint');
+  const afterOp = amtEl ? (await amtEl.text()).trim() : '';
+  const afterOpHint = hintEl ? (await hintEl.text()).trim() : '';
+  check('按 + 后大号位停在第一个数', afterOp === '12.50', afterOp);
+  check('按 + 后算式只有左操作数', afterOpHint === '12.50 +', afterOpHint);
+
+  await tapSeq('3.2');
+  await sleep(200);
+  amtEl = await page.$('.record__amount');
+  hintEl = await page.$('.record__hint');
+  const sumText = amtEl ? (await amtEl.text()).trim() : '';
+  const sumHint = hintEl ? (await hintEl.text()).trim() : '';
+  check('输入第二个数时大号位显示合计', sumText === '15.70', `显示 ${sumText}`);
+  check('算式行写出完整算式', sumHint === '12.50 + 3.20 =', sumHint);
+
+  // 减法要能显示负数合计（保存按钮此时不可用，这里只断言数字）
+  await tapSeq('-');
+  await tapSeq('20');
+  await sleep(200);
+  amtEl = await page.$('.record__amount');
+  const minusText = amtEl ? (await amtEl.text()).trim() : '';
+  check('减法合计可为负', minusText === '-4.30', `显示 ${minusText}`);
 
   // ---------- 截图 ----------
   try {
