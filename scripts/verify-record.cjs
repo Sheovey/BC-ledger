@@ -60,6 +60,14 @@ async function tapText(page, selector, text) {
   console.log('已连接自动化端口\n');
 
   // ---------- 基线 ----------
+  // 本套断言全部以「干净账本」为基线（流水 0 条、本月支出 0.00）。
+  // 早先不重置，批量跑时基线继承上一套脚本播下的数据，会连锁出两类假红：
+  //   ① 本月支出累计过千后首页显示千分位（`2,619.56`），与未加逗号的期望值不相等；
+  //   ② 首页最近流水只展示有限条，刚记的那笔可能被更晚的旧记录挤出窗口，找不到 `+N`。
+  // 这里验的是「记一笔」这条链路本身，与历史数据无关，所以每次从 resetAll() 开始。
+  await mp.evaluate(() => globalThis.__ledgerStore.getState().resetAll());
+  await sleep(800);
+
   await mp.reLaunch('/pages/home/index');
   await sleep(1200);
   let page = await mp.currentPage();
@@ -321,7 +329,13 @@ async function tapText(page, selector, text) {
   const statValues = await page.$$('.home-stat__value');
   const expenseText = statValues.length ? (await statValues[0].text()).trim() : '';
   const expected = (Number(expenseBeforeText.replace(/[^\d.-]/g, '')) + 12.5).toFixed(2);
-  check('首页本月支出已刷新', expenseText === expected, `页面 ${expenseText} / 期望 ${expected}`);
+  // 金额过千后首页会带千分位（`2,619.56`），比较前两边都得清掉逗号，
+  // 否则「数字其实对、只差一个逗号」会被报成失败。
+  check(
+    '首页本月支出已刷新',
+    expenseText.replace(/[,\s]/g, '') === expected,
+    `页面 ${expenseText} / 期望 ${expected}`,
+  );
 
   // 首页「最近流水」的时间戳要能看出是哪一天：刚记的这笔必须是「今天 HH:mm」。
   // 只写 HH:mm 的话，跨天的几条记录全长得一样（老板 2026-11-06 反馈）。
