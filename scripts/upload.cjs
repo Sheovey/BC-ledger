@@ -72,7 +72,12 @@ if (login.status !== 0) {
 }
 
 console.log(`[2/2] 上传 ${desc}`);
-const up = spawnSync(process.execPath, ['scripts/wxcli.cjs', 'upload', '-v', version, '-d', desc], {
+// 注意这里多包了一层引号：wxcli.cjs 用 spawnSync(..., { shell: true }) 调 .bat，
+// Node 在 shell 模式下只是把参数用空格拼起来、不逐个加引号，
+// 于是「1.1.5 · 2026-11-06 · 3f5a189 · 说明」会被 cmd 按空格拆成 4 个参数，
+// 真正落到 -d 上的只有第一个词「1.1.5」（实测：传 ['-d','1.1.5 x y'] 收到的是
+// ["-d","1.1.5","x","y"]；写成 ['-d','"1.1.5 x y"'] 才是 ["-d","1.1.5 x y"]）。
+const up = spawnSync(process.execPath, ['scripts/wxcli.cjs', 'upload', '-v', version, '-d', `"${desc}"`], {
   cwd: root,
   stdio: 'inherit',
 });
