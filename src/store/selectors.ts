@@ -53,6 +53,18 @@ export function categoryLabel(byId: Map<string, Category>, id: string | null): s
   return parent ? `${parent.name} / ${category.name}` : category.name;
 }
 
+/**
+ * 一笔流水挂的全部二级分类（含主分类）。
+ *
+ * 老数据只有 `categoryId`，没有 `categoryIds`，这里统一成单元素数组，
+ * 调用方不必各写一遍兼容判断。**金额永远只按 `categoryId` 计**，
+ * 这个数组只用于显示与搜索。
+ */
+export function txCategoryIds(tx: Tx): string[] {
+  if (tx.categoryIds && tx.categoryIds.length) return tx.categoryIds;
+  return tx.categoryId ? [tx.categoryId] : [];
+}
+
 /** 流水排序比较器：时间倒序；同一时刻按创建时间倒序，避免同秒记录顺序不稳。 */
 export function compareTxDesc(a: Tx, b: Tx): number {
   return b.occurredAt.localeCompare(a.occurredAt) || b.createdAt.localeCompare(a.createdAt);
@@ -368,8 +380,12 @@ export function searchTransactions(txs: Tx[], keyword: string, categories: Categ
   return txs.filter((tx) => {
     const categoryName = tx.categoryId ? byId.get(tx.categoryId)?.name ?? '' : '';
     const parentName = tx.categoryId ? byId.get(byId.get(tx.categoryId)?.parentId ?? '')?.name ?? '' : '';
+    // 多选时那些「附加」的二级分类也要能搜到：搜「零食」应命中一笔主分类是「早午晚餐」的记录
+    const extraNames = txCategoryIds(tx)
+      .map((id) => byId.get(id)?.name ?? '')
+      .join(' ');
     const amountText = (tx.amount / 100).toFixed(2);
-    return [tx.note, tx.merchant, categoryName, parentName, amountText].some((field) =>
+    return [tx.note, tx.merchant, categoryName, parentName, extraNames, amountText].some((field) =>
       (field ?? '').toLowerCase().includes(kw),
     );
   });

@@ -78,11 +78,21 @@
 
 /* 全局 .chip-row 是 overflow-x: auto（Web 版横向滚动），
    小程序里 View 的可滚动容器手感差且容易串到页面纵向滚动，
-   本页 5 个 chip 在 343px 内容宽内放得下，直接换行布局。 */
+   本页 5 个 chip 在 358px 内容宽内放得下，直接换行布局。
+   改成五等分：原来按内容紧排（各 52px，右缘到 308px），右侧空出 66px，
+   五个挤在左边一串 —— 老板原话「揉在一起」。等分后每格 66.8px、文字居中。 */
 .ledger-chip-row {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   overflow: visible;
   padding: 10px 0 2px;
+  gap: 6px;
+}
+
+.ledger-chip-row .chip {
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+  padding: 0 4px;
 }
 
 /* ---------- 月份分段（独占一行） ---------- */
@@ -172,27 +182,52 @@
 }
 
 /* ---------- 筛选合计 ---------- */
+/* 竖向三段：标签在上、金额在下、每格居中。
+   原来是四项横排（筛选合计 + 支 + 收 + 结余），5 位数带千分位时总宽 328px，
+   可用宽 330px —— 刚好卡死，四个文本全被压成两行（实测高度 42px，单行应为 19px）。
+   横排再怎么压缩字号都只能换来「刚好不折」，稍多一位就又崩；竖排是唯一稳的解。 */
 .ledger-totals {
-  display: flex;
-  align-items: center;
-  gap: 14px;
   margin-top: 10px;
-  padding: 10px 14px;
-  font-size: 13.5px;
+  padding: 10px 10px 12px;
 }
 
 .ledger-totals__label {
+  display: block;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-3);
+  margin-bottom: 9px;
+}
+
+.ledger-totals__row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.ledger-totals__cell {
+  /* 用 auto 而不是 0 做 basis：金额位数不同（万/十万/百万）时按内容分配宽度，
+     硬三等分会在「结余 -1,234,567.89」这种长度下把数字挤出格。 */
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.ledger-totals__name {
+  font-size: 12.5px;
   color: var(--text-3);
 }
 
-.ledger-totals__num {
-  font-size: 13.5px;
+.ledger-totals__value {
+  font-size: 15.5px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.ledger-totals__net {
-  margin-left: auto;
-  color: var(--text-2);
-  font-size: 13.5px;
+.ledger-totals__value--net {
+  color: var(--text);
 }
 
 /* ---------- 时间轴 ---------- */

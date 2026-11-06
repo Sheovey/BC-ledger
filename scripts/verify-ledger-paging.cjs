@@ -153,10 +153,11 @@ const domRowCount = async (page) => (await page.$$('.tx-row')).length;
   const expectDay = `支${(seed.firstDayExpense / 100).toFixed(2)}`;
   check('第一个日组合计是当天全量', firstDayText.includes(expectDay), `${firstDayText} / 期望含 ${expectDay}`);
 
-  const totalsEl = await page.$('.ledger-totals');
-  const totalsText = totalsEl ? (await totalsEl.text()).replace(/\s/g, '') : '';
-  const expectAll = `支${(seed.allExpense / 100).toFixed(2)}`;
-  check('筛选合计按全量算', totalsText.includes(expectAll), `${totalsText} / 期望含 ${expectAll}`);
+  // 合计卡改竖向三段后，第一格是支出金额（不含「支」前缀），按位置取更稳
+  const totalsEl = await page.$('.ledger-totals__value');
+  const totalsText = totalsEl ? (await totalsEl.text()).replace(/[,\s]/g, '') : '';
+  const expectAll = (seed.allExpense / 100).toFixed(2);
+  check('筛选合计按全量算', totalsText === expectAll, `${totalsText} / 期望 ${expectAll}`);
 
   const footEl = await page.$('.load-more');
   const footText = footEl ? (await footEl.text()).trim() : '';

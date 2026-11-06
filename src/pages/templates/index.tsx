@@ -249,11 +249,9 @@ export default function TemplatesPage() {
         <Sheet onClose={() => setCategorySheet(false)} title='选择分类'>
           <CategoryPicker
             data={data}
-            onSelect={(id) => {
-              setCategoryId(id);
-              setCategorySheet(false);
-            }}
-            selectedId={categoryId}
+            onChange={(ids) => setCategoryId(ids[0] ?? null)}
+            onPick={() => setCategorySheet(false)}
+            selectedIds={categoryId ? [categoryId] : []}
             type={type === 'income' ? 'income' : 'expense'}
           />
         </Sheet>

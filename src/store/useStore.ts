@@ -17,6 +17,7 @@ import { loadData, saveData, rotateBackup, dataKeyPrefix, invalidateWriteCache }
 import { syncAfterWrite } from '@/db/sync';
 import { createAccountsForBook, createBook, createInitialData, createPresetCategories } from '@/db/seed';
 import { buildDemoData } from '@/db/demo';
+import { txCategoryIds } from './selectors';
 
 interface Toast {
   id: number;
@@ -174,9 +175,14 @@ export const useStore = create<LedgerState>()((set, get) => ({
     const tx: Tx = { ...input, id: uid('tx'), createdAt: now, updatedAt: now };
     set((state) => {
       const data = touch({ ...state.data, txs: [tx, ...state.data.txs] });
-      // 记录最近使用分类，记账页「最近使用」组即取自此列表
-      if (tx.categoryId) {
-        const recent = [tx.categoryId, ...data.settings.recentCategoryIds.filter((id) => id !== tx.categoryId)].slice(0, 20);
+      // 记录最近使用分类，记账页「最近使用」组即取自此列表。
+      // 多选时把勾过的细项也一并记进去 —— 用户确实用过它们，下次想再选更快。
+      const usedIds = txCategoryIds(tx);
+      if (usedIds.length) {
+        const recent = [
+          ...usedIds,
+          ...data.settings.recentCategoryIds.filter((id) => !usedIds.includes(id)),
+        ].slice(0, 20);
         data.settings = { ...data.settings, recentCategoryIds: recent };
       }
       return { data: { ...data } };

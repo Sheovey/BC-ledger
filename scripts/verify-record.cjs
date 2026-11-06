@@ -123,6 +123,21 @@ async function tapText(page, selector, text) {
       /\{keypadOpen && \(amount\.text \|\| amount\.expression\) \? <View className='record__amount-caret' \/> : null\}/.test(RECORD_SRC),
   );
 
+  // 多选分类：同根累加、跨根替换 —— 这是「一级只能一个、二级可多选」的实现契约
+  const PICKER_SRC = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'components', 'CategoryPicker.tsx'),
+    'utf8',
+  );
+  check(
+    '分类选择器支持多选（同根累加）',
+    /sameRoot\.includes\(id\)/.test(PICKER_SRC) && /onChange\(\[\.\.\.sameRoot, id\]\)/.test(PICKER_SRC),
+  );
+  check(
+    '跨一级分类会整组替换',
+    /const sameRoot = selectedIds\.filter\(\(x\) => rootIdOf\(x\) === rootKey\)/.test(PICKER_SRC),
+  );
+  check('记账页以多选模式使用分类选择器', /<CategoryPicker[\s\S]{0,200}?multiple/.test(RECORD_SRC));
+
   let tabSwitchOk = 0;
   for (const url of ['/pages/ledger/index', '/pages/stats/index', '/pages/settings/index', '/pages/home/index']) {
     try {
@@ -193,11 +208,14 @@ async function tapText(page, selector, text) {
       : '取不到位置',
   );
 
-  // ---------- 4. 选分类 ----------
+  // ---------- 4. 选分类（多选：同一一级下勾两个子分类） ----------
   await fields[0].tap();
   await sleep(600);
   const roots = await page.$$('.cat-item');
   check('分类弹层打开', roots.length > 0, `根分类 ${roots.length} 个`);
+  const doneBtn0 = await page.$('.sheet__foot .btn');
+  check('分类弹层底部有「完成」按钮', Boolean(doneBtn0), doneBtn0 ? (await doneBtn0.text()).trim() : '无');
+  let multiPicked = 0;
   if (roots.length) {
     await roots[0].tap();
     await sleep(400);
@@ -205,11 +223,59 @@ async function tapText(page, selector, text) {
     if (subs.length) {
       await subs[0].tap();
       await sleep(400);
+      multiPicked = 1;
+      if (subs.length > 1) {
+        // 同一个一级分类下再勾一个：应该累加，而不是替换
+        await subs[1].tap();
+        await sleep(400);
+        multiPicked = 2;
+      }
     }
   }
-  const catValue = (await page.$$('.record__field-value'))[0];
-  const catName = catValue ? (await catValue.text()).trim() : '';
+  const fieldValues = await page.$$('.record__field-value');
+  const catName = fieldValues[0] ? (await fieldValues[0].text()).trim() : '';
   check('分类已选中', catName !== '选择分类' && catName !== '', catName);
+  check(
+    '同根多选会在分类名后标 +N',
+    multiPicked === 2 ? /\+1$/.test(catName.replace(/\s/g, '')) || catName.includes('+1') : true,
+    `${catName}（勾了 ${multiPicked} 个）`,
+  );
+
+  // 跨一级分类：换到别的根再勾，之前那个根的选择必须被整组替换（一级只能一个）
+  if (roots.length > 1) {
+    await roots[1].tap();
+    await sleep(400);
+    const otherSubs = await page.$$('.cat-sub');
+    if (otherSubs.length) {
+      await otherSubs[0].tap();
+      await sleep(400);
+      const afterSwitch = await page.$$('.record__field-value');
+      const txt = afterSwitch[0] ? (await afterSwitch[0].text()).trim() : '';
+      check('换一级分类会替换掉旧选择', !txt.includes('+'), txt);
+      // 换回原根，重新勾回两个，后面的保存断言依赖这个状态
+      await roots[0].tap();
+      await sleep(400);
+      const backSubs = await page.$$('.cat-sub');
+      if (backSubs.length) {
+        await backSubs[0].tap();
+        await sleep(350);
+        if (backSubs.length > 1) {
+          await backSubs[1].tap();
+          await sleep(350);
+        }
+      }
+    }
+  }
+
+  // 点「完成」收尾。多选改造后点分类不再自动关弹层，
+  // 少了这一步后续点保存会被弹层挡住（真机上表现为「保存没反应」）。
+  const doneBtn = await page.$('.sheet__foot .btn');
+  if (doneBtn) {
+    await doneBtn.tap();
+    await sleep(500);
+  }
+  const sheetGone = (await page.$$('.cat-item')).length === 0;
+  check('点「完成」收起分类弹层', sheetGone);
 
   // ---------- 5. 保存 ----------
   const saveBtn = await page.$('.record__save');
@@ -228,11 +294,27 @@ async function tapText(page, selector, text) {
     return {
       count: txs.length,
       total: txs.filter((t) => t.type === 'expense').reduce((a, b) => a + b.amount, 0),
-      last: last ? { amount: last.amount, categoryId: last.categoryId } : null,
+      last: last
+        ? {
+            amount: last.amount,
+            categoryId: last.categoryId,
+            catIds: last.categoryIds ?? null,
+          }
+        : null,
     };
   });
   check('流水条数 +1', after.count === before.count + 1, `${before.count} → ${after.count}`);
   check('新增金额为 1250 分', after.last && after.last.amount === 1250, JSON.stringify(after.last));
+  check(
+    '多选的分类都写进 categoryIds',
+    Boolean(after.last && after.last.catIds && after.last.catIds.length === 2),
+    JSON.stringify(after.last && after.last.catIds),
+  );
+  check(
+    '主分类就是 categoryIds 的第一个',
+    Boolean(after.last && after.last.catIds && after.last.catIds[0] === after.last.categoryId),
+    `${after.last && after.last.categoryId}`,
+  );
 
   // 首页上的本月支出是否跟着变（读 DOM，验证的是渲染而不只是内存）
   await sleep(600);
@@ -257,6 +339,12 @@ async function tapText(page, selector, text) {
     stampTexts.some((t) => /^今天 \d{2}:\d{2}$/.test(t)),
     stampTexts[0] ?? '无行',
   );
+
+  // 多选分类在流水行上只留一个「+N」提示，且金额不重复计算
+  // —— 上面那条「本月支出 = 原值 + 12.5」本身就是重复计数的守门员：
+  // 若 2 个分类各算一次 12.5，支出会变成 +25，那条会立刻红。
+  const extraEls = await page.$$('.tx-row__extra');
+  check('流水行标出附加分类数', extraEls.length > 0, `+N 标记 ${extraEls.length} 个`);
 
   // ---------- 7. 多笔合计：大号位显示合计，小字位显示算式 ----------
   // 原来大号位是「刚敲的操作数」，第一个数藏在下面小字里，用户看不到总数。

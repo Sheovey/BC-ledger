@@ -66,7 +66,16 @@ export default function RecordPage() {
   );
 
   const [type, setType] = useState<TxType>(existing?.type ?? presetType ?? 'expense');
-  const [categoryId, setCategoryId] = useState<string | null>(existing?.categoryId ?? null);
+  /**
+   * 选中的分类集合。第一个是主分类（金额只记在它身上，分类统计也只看它），
+   * 其余是「这笔钱还涉及哪些细项」的标签，不参与金额分摊。
+   * 老数据只有单个 categoryId，回填成单元素数组。
+   */
+  const [categoryIds, setCategoryIds] = useState<string[]>(() => {
+    if (existing?.categoryIds?.length) return existing.categoryIds;
+    return existing?.categoryId ? [existing.categoryId] : [];
+  });
+  const categoryId = categoryIds[0] ?? null;
   const [accountId, setAccountId] = useState<string | null>(existing?.accountId ?? accounts[0]?.id ?? null);
   const [toAccountId, setToAccountId] = useState<string | null>(
     existing?.toAccountId ?? accounts[1]?.id ?? null,
@@ -93,14 +102,15 @@ export default function RecordPage() {
 
   const account = accounts.find((a) => a.id === accountId);
   const toAccount = accounts.find((a) => a.id === toAccountId);
-  const categoryName = categoryId
-    ? categoryLabel(new Map(data.categories.map((c) => [c.id, c])), categoryId)
-    : null;
+  const categoryMap = useMemo(() => new Map(data.categories.map((c) => [c.id, c])), [data.categories]);
+  const categoryName = categoryId ? categoryLabel(categoryMap, categoryId) : null;
+  /** 主分类之外还勾了几个细项，界面上显示成「+2」 */
+  const extraCategoryCount = Math.max(0, categoryIds.length - 1);
 
   const switchType = (next: TxType) => {
     setType(next);
     if (next === 'transfer' || next === 'balance') {
-      setCategoryId(null);
+      setCategoryIds([]);
     }
   };
 
@@ -131,6 +141,7 @@ export default function RecordPage() {
         type: txType,
         amount: delta,
         categoryId: null,
+        categoryIds: [] as string[],
         accountId,
         toAccountId: null,
         projectId: null,
@@ -172,6 +183,9 @@ export default function RecordPage() {
       type: txType,
       amount: Math.round(rawFen),
       categoryId: txType === 'transfer' ? null : categoryId,
+      // 多选的二级分类（含主分类）。金额不分摊，这里只是标签；
+      // 单选也写一份，免得下游出现「有的记录读 categoryId、有的读 categoryIds」两套读法。
+      categoryIds: txType === 'transfer' ? [] : categoryIds,
       accountId,
       toAccountId: txType === 'transfer' ? toAccountId : null,
       projectId: txType === 'transfer' ? null : projectId,
@@ -274,6 +288,9 @@ export default function RecordPage() {
             <Text className='record__field-label'>分类</Text>
             <Text className={`record__field-value ${categoryName ? '' : 'record__field-value--muted'}`}>
               {categoryName ?? '选择分类'}
+              {extraCategoryCount ? (
+                <Text className='record__field-extra'>{` +${extraCategoryCount}`}</Text>
+              ) : null}
             </Text>
             <Icon className='row__chevron' name='forward' size={16} />
           </View>
@@ -374,18 +391,36 @@ export default function RecordPage() {
       )}
 
       {sheet === 'category' && (type === 'expense' || type === 'income') ? (
-        <Sheet onClose={() => setSheet(null)} title='选择分类'>
+        <Sheet
+          footer={
+            /* 「完成」放 Sheet 的 footer：宫格 + 子分类常常要滚一段才到底，
+               放在内容末尾会看不见，用户勾完找不到怎么收尾。 */
+            <View className='sheet__foot'>
+              <View
+                className={`btn btn--block ${categoryIds.length ? 'btn--primary' : 'btn--muted'}`}
+                hoverClass='btn--hover'
+                onClick={() => {
+                  if (categoryIds.length) setSheet(null);
+                }}
+              >
+                {categoryIds.length
+                  ? `完成${extraCategoryCount ? ` · 已选 ${categoryIds.length} 项` : ''}`
+                  : '请选择分类'}
+              </View>
+            </View>
+          }
+          onClose={() => setSheet(null)}
+          title='选择分类'
+        >
           <CategoryPicker
             data={data}
+            multiple
+            onChange={setCategoryIds}
             onManage={() => {
               setSheet(null);
               navigate({ name: 'categories' });
             }}
-            onSelect={(id) => {
-              setCategoryId(id);
-              setSheet(null);
-            }}
-            selectedId={categoryId}
+            selectedIds={categoryIds}
             type={type}
           />
         </Sheet>
@@ -484,7 +519,8 @@ export default function RecordPage() {
               key={template.id}
               onClick={() => {
                 switchType(template.type);
-                setCategoryId(template.categoryId);
+                // 模板只存主分类，带不出多选的细项标签
+                setCategoryIds(template.categoryId ? [template.categoryId] : []);
                 setAccountId(template.accountId);
                 setProjectId(template.projectId);
                 setMerchant(template.merchant);

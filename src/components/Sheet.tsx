@@ -45,7 +45,9 @@ export function Sheet({ title, onClose, children, footer }: SheetProps) {
             <Icon name='close' size={18} />
           </View>
         </View>
-        <View className='sheet__body'>{children}</View>
+        {/* 有 footer 时底部安全区由 footer 负责，body 不再留 ——
+            两处都加 env(safe-area-inset-bottom) 会叠出 30 多 px 空白。 */}
+        <View className={`sheet__body ${footer ? 'sheet__body--with-foot' : ''}`}>{children}</View>
         {footer}
       </View>
     </View>

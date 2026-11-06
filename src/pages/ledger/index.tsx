@@ -316,13 +316,29 @@ export default function LedgerPage() {
 
         <View className='card ledger-totals'>
           <Text className='ledger-totals__label'>筛选合计</Text>
-          <Text className='amount-expense num ledger-totals__num'>
-            支 {formatMoney(totals.expense, { digits: 2 })}
-          </Text>
-          <Text className='amount-income num ledger-totals__num'>
-            收 {formatMoney(totals.income, { digits: 2 })}
-          </Text>
-          <Text className='num ledger-totals__net'>结余 {formatMoney(totals.net, { digits: 2 })}</Text>
+          {/* 三项各占一格、标签在上金额在下：原来四项横向排一行，5 位数金额
+              加千分位后总宽 328px 刚好压在 330px 的可用宽上，每个 Text 都被
+              压成两行（实测四个文本高度都是 42px）。竖排后每格只需装下金额本身。 */}
+          <View className='ledger-totals__row'>
+            <View className='ledger-totals__cell'>
+              <Text className='ledger-totals__name'>支出</Text>
+              <Text className='amount-expense num ledger-totals__value'>
+                {formatMoney(totals.expense, { digits: 2 })}
+              </Text>
+            </View>
+            <View className='ledger-totals__cell'>
+              <Text className='ledger-totals__name'>收入</Text>
+              <Text className='amount-income num ledger-totals__value'>
+                {formatMoney(totals.income, { digits: 2 })}
+              </Text>
+            </View>
+            <View className='ledger-totals__cell'>
+              <Text className='ledger-totals__name'>结余</Text>
+              <Text className='ledger-totals__value ledger-totals__value--net num'>
+                {formatMoney(totals.net, { digits: 2 })}
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
 

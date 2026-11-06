@@ -1,7 +1,7 @@
 import { View, Text } from '@tarojs/components';
 import type { LedgerData, Tx } from '@/types';
 import { Icon } from './Icon';
-import { buildCategoryMap } from '@/store/selectors';
+import { buildCategoryMap, txCategoryIds } from '@/store/selectors';
 import { formatMoney } from '@/utils/money';
 import { pad2, formatStampRelative, parseDateStr } from '@/utils/date';
 
@@ -66,6 +66,12 @@ export function TxRow({ tx, data, onClick, stampStyle = 'time' }: TxRowProps) {
   if (tx.merchant) metaParts.push(tx.merchant);
   if (tx.note) metaParts.push(tx.note);
 
+  /**
+   * 多选分类时，主分类之外还挂了几个细项。金额只算在主分类上，
+   * 所以这里只是个「这笔钱还涉及 N 个其它细项」的提示，不带金额。
+   */
+  const extraCount = Math.max(0, txCategoryIds(tx).length - 1);
+
   const hhmm = `${pad2(time.getHours())}:${pad2(time.getMinutes())}`;
   const stamp =
     stampStyle === 'relative'
@@ -80,7 +86,10 @@ export function TxRow({ tx, data, onClick, stampStyle = 'time' }: TxRowProps) {
         <Icon name={icon} size={19} />
       </View>
       <View className='tx-row__body'>
-        <Text className='tx-row__name'>{title}</Text>
+        <Text className='tx-row__name'>
+          {title}
+          {extraCount ? <Text className='tx-row__extra'>{` +${extraCount}`}</Text> : null}
+        </Text>
         <Text className='tx-row__note'>
           {metaParts.length ? metaParts.join(' · ') : '无备注'}
         </Text>

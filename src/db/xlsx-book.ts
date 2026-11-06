@@ -8,6 +8,7 @@ import {
   groupByDimension,
   summarize,
   totalAssets,
+  txCategoryIds,
 } from '@/store/selectors';
 import { monthKey, todayStr } from '@/utils/date';
 import { fenToYuan } from '@/utils/money';
@@ -115,13 +116,18 @@ export function buildBookWorkbook(
   ];
   for (const tx of txs) {
     const root = rootOf(tx.categoryId);
-    const leaf = tx.categoryId ? byId.get(tx.categoryId) : undefined;
-    const isLeafOfRoot = leaf && root && leaf.id !== root.id;
+    // 二级分类一列写「这笔涉及的全部细项」，多选时用顿号连起来。
+    // 不新增列：表结构一变，所有引用这份表格的公式与既有归档都会错位。
+    const subNames: string[] = [];
+    for (const id of txCategoryIds(tx)) {
+      const sub = byId.get(id);
+      if (sub && sub.id !== root?.id) subNames.push(sub.name);
+    }
     txRows.push([
       tx.occurredAt.replace('T', ' '),
       TYPE_LABEL[tx.type] ?? tx.type,
       root?.name ?? '',
-      isLeafOfRoot ? leaf?.name ?? '' : '',
+      subNames.join('、'),
       fenToYuan(tx.amount),
       accountName(tx.accountId),
       tx.type === 'transfer' ? accountName(tx.toAccountId) : '',
@@ -134,7 +140,8 @@ export function buildBookWorkbook(
   const flow: XlsxSheet = {
     name: '流水',
     rows: txRows,
-    colWidths: [17, 10, 14, 14, 13, 14, 14, 12, 16, 28],
+    // 二级分类列 14 → 20：多选时这一格会是「早午晚餐、早餐、午餐」这种串
+    colWidths: [17, 10, 14, 20, 13, 14, 14, 12, 16, 28],
     headerRow: true,
     moneyCols: [4],
   };

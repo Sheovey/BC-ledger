@@ -337,6 +337,14 @@
   text-overflow: ellipsis;
 }
 
+/* 多选分类时多出来的细项数量。只标个数不带金额 —— 金额全在主分类上，
+   这里带数字会让人以为要相加。 */
+.tx-row__extra {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--accent-deep);
+}
+
 .tx-row__note {
   display: block;
   font-size: 13px;
@@ -537,6 +545,12 @@
 
 .record__field-value--muted {
   color: var(--text-3);
+}
+
+/* 分类那一行里「+2」的附加细项计数，比主分类名弱一档但不能太小 */
+.record__field-extra {
+  font-size: 13.5px;
+  color: var(--accent-deep);
 }
 
 .record__chips {
@@ -926,6 +940,7 @@
    每列 71.8px（含 4px 列距），46px 气泡两侧各余 10px 以上，不挤。
    图标随之 20→22，与气泡仍保持 0.48 的比例，看起来「撑得起来」又不溢出。 */
 .cat-item__bubble {
+  position: relative;
   width: 46px;
   height: 46px;
   border-radius: 15px;
@@ -933,6 +948,25 @@
   align-items: center;
   justify-content: center;
   color: #fff;
+}
+
+/* 已选数量角标。与 `--active` 的描边是两个意思，别混：
+   描边 = 当前正在浏览哪个一级分类；角标 = 这个一级分类下已经勾了几项。 */
+.cat-item__badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 1.5px var(--surface);
 }
 
 .cat-item__name {

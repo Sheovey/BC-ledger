@@ -236,15 +236,53 @@ const domMonths = async (page) => {
     const inc = txs.filter((t) => t.type === 'income').reduce((a, b) => a + b.amount, 0);
     return { exp, inc, net: inc - exp };
   });
-  const totalEls = await page.$$('.ledger-totals__num');
-  const netEl = await page.$('.ledger-totals__net');
-  const shownExp = totalEls.length ? (await totalEls[0].text()).trim() : '';
-  const shownInc = totalEls.length > 1 ? (await totalEls[1].text()).trim() : '';
-  const shownNet = netEl ? (await netEl.text()).trim() : '';
+  // 合计卡是竖向三段（支出/收入/结余），标签与金额分开两层，
+  // 金额不再带「支/收/结余」前缀 —— 所以按位置取 value 比拼文本更稳。
+  const valueEls = await page.$$('.ledger-totals__value');
+  const nameEls = await page.$$('.ledger-totals__name');
+  const names = [];
+  for (const el of nameEls) names.push((await el.text()).trim());
+  const shownExp = valueEls.length ? (await valueEls[0].text()).trim() : '';
+  const shownInc = valueEls.length > 1 ? (await valueEls[1].text()).trim() : '';
+  const shownNet = valueEls.length > 2 ? (await valueEls[2].text()).trim() : '';
   const yuan = (fen) => `${Math.floor(Math.abs(fen) / 100)}.${String(Math.abs(fen) % 100).padStart(2, '0')}`;
-  check('合计·支出来自真实数据', shownExp === `支 ${yuan(totals.exp)}`, `页面 ${shownExp} / 期望 支 ${yuan(totals.exp)}`);
-  check('合计·收入来自真实数据', shownInc === `收 ${yuan(totals.inc)}`, `页面 ${shownInc} / 期望 收 ${yuan(totals.inc)}`);
-  check('合计·结余结余正确', shownNet === `结余 ${totals.net < 0 ? '-' : ''}${yuan(totals.net)}`, `页面 ${shownNet}`);
+  // formatMoney 会在万位以上加千分位，比较前两侧都去掉逗号，免得大额数据误判
+  const norm = (s) => s.replace(/,/g, '');
+  check('合计三项标签齐全', names.join('/') === '支出/收入/结余', names.join('/'));
+  check('合计·支出来自真实数据', norm(shownExp) === yuan(totals.exp), `页面 ${shownExp} / 期望 ${yuan(totals.exp)}`);
+  check('合计·收入来自真实数据', norm(shownInc) === yuan(totals.inc), `页面 ${shownInc} / 期望 ${yuan(totals.inc)}`);
+  check(
+    '合计·结余结余正确',
+    norm(shownNet) === `${totals.net < 0 ? '-' : ''}${yuan(totals.net)}`,
+    `页面 ${shownNet}`,
+  );
+
+  // 防回归：合计卡曾经是四项横排，5 位数金额时每个文本都被压成两行
+  // （实测高度 42px，单行应为 19px）。竖排后任何一格折行都会立刻被这条抓住。
+  const valueHeights = [];
+  for (const el of valueEls) {
+    const s = await el.size();
+    valueHeights.push(Math.round(s.height));
+  }
+  check(
+    '合计金额都是单行（未折行）',
+    valueHeights.length === 3 && valueHeights.every((h) => h > 0 && h < 26),
+    valueHeights.join('/') + 'px',
+  );
+
+  // 类型筛选五格等分整行：原来是按内容宽度紧排，右侧空出一大片，
+  // 五个挤在左边（老板原话「揉在一起」）。
+  const chipEls = await page.$$('.ledger-chip-row .chip');
+  const chipWidths = [];
+  for (const el of chipEls) {
+    const s = await el.size();
+    chipWidths.push(Math.round(s.width));
+  }
+  check(
+    '类型筛选五格等宽',
+    chipWidths.length === 5 && Math.max(...chipWidths) - Math.min(...chipWidths) <= 1,
+    chipWidths.join('/') + 'px',
+  );
 
   // ---------- 9. 点行进编辑态 ----------
   const firstRow = await page.$('.tx-row');
