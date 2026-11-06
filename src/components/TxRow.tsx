@@ -63,8 +63,10 @@ export function TxRow({ tx, data, onClick, stampStyle = 'time' }: TxRowProps) {
   } else if (account) {
     metaParts.push(account.name);
   }
-  if (tx.merchant) metaParts.push(tx.merchant);
+  // 顺序：账户 · 备注 · 商家。备注是用户自己写的、辨识度最高，放商家前面；
+  // 商家常为空，排在最后，缺省时行尾不会留一个孤零零的分隔符。
   if (tx.note) metaParts.push(tx.note);
+  if (tx.merchant) metaParts.push(tx.merchant);
 
   /**
    * 多选分类时，主分类之外还挂了几个细项。金额只算在主分类上，

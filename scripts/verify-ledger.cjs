@@ -16,6 +16,7 @@
  * 5. 筛选合计的三个数字与页面上的筛选结果自洽
  * 6. 搜不到时出现空状态与「清除筛选条件」，点了能恢复
  * 7. 点流水行进编辑态、点右上角加号进记账页
+ * 8. 行内信息顺序为 账户 · 备注 · 商家
  */
 const automator = require('miniprogram-automator');
 const { goTab } = require('./lib/nav.cjs');
@@ -112,7 +113,7 @@ const domMonths = async (page) => {
     };
 
     const seed = [
-      { ...base, type: 'expense', amount: 1250, note: '午餐', occurredAt: `${stamp(today)}T10:00`, categoryId: expCat ? expCat.id : null },
+      { ...base, type: 'expense', amount: 1250, note: '午餐', merchant: '食堂', occurredAt: `${stamp(today)}T10:00`, categoryId: expCat ? expCat.id : null },
       { ...base, type: 'income', amount: 10000, note: '稿费', occurredAt: `${stamp(today)}T15:30`, categoryId: incCat ? incCat.id : null },
       { ...base, type: 'expense', amount: 800, note: '早餐', occurredAt: `${stamp(yesterday)}T08:00`, categoryId: expCat ? expCat.id : null },
       { ...base, type: 'expense', amount: 3000, note: '上月打车', occurredAt: `${stamp(lastMonth)}T09:00`, categoryId: expCat ? expCat.id : null },
@@ -163,6 +164,27 @@ const domMonths = async (page) => {
     '本月与上月标题都在',
     months.includes(seedInfo.todayLabel) && months.includes(seedInfo.lastMonthLabel),
     months.join(' | '),
+  );
+
+  // ---------- 3.5 行内信息顺序：账户 · 备注 · 商家 ----------
+  // 账户名随数据而变，不写死；只钉死后两段的相对位置 —— 备注必须在商家之前。
+  let lunchMeta = '';
+  for (const el of await page.$$('.tx-row')) {
+    const noteEl = await el.$('.tx-row__note');
+    const t = noteEl ? (await noteEl.text()).trim() : '';
+    if (t.includes('午餐')) {
+      lunchMeta = t;
+      break;
+    }
+  }
+  const metaParts = lunchMeta
+    .split('·')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  check(
+    '行内信息顺序为 账户 · 备注 · 商家',
+    metaParts.length === 3 && metaParts[1] === '午餐' && metaParts[2] === '食堂',
+    lunchMeta || '(未找到含「午餐」的行)',
   );
 
   // ---------- 4. 类型筛选 ----------
