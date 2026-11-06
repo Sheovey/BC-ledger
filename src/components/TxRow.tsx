@@ -3,7 +3,7 @@ import type { LedgerData, Tx } from '@/types';
 import { Icon } from './Icon';
 import { buildCategoryMap } from '@/store/selectors';
 import { formatMoney } from '@/utils/money';
-import { pad2, parseDateStr } from '@/utils/date';
+import { pad2, formatStampRelative, parseDateStr } from '@/utils/date';
 
 /**
  * 流水行。与 Web 版逻辑完全一致，仅替换渲染原语：
@@ -16,13 +16,16 @@ interface TxRowProps {
   data: LedgerData;
   onClick?: () => void;
   /**
-   * 显示日期。流水页按日分组，日期在组标题上，行内只需时间；
-   * 统计页的明细跨天混排，只显示 HH:mm 会分不清是哪天，所以要开这个开关。
+   * 时间戳的显示方式，按「这一行所在的列表是否按天分组」来选：
+   * - 'time'（默认）：流水页按日分组，日期已在组标题上，行内只需 HH:mm；
+   * - 'date'：统计页明细跨天混排，只写 HH:mm 分不清是哪天 → 前缀 MM-DD；
+   * - 'relative'：首页「最近流水」是全账本最近几条，跨天甚至跨月 →
+   *   今天 / 昨天 / MM-DD，跨年补年份（见 utils/date.ts 的 formatStampRelative）。
    */
-  showDate?: boolean;
+  stampStyle?: 'time' | 'date' | 'relative';
 }
 
-export function TxRow({ tx, data, onClick, showDate = false }: TxRowProps) {
+export function TxRow({ tx, data, onClick, stampStyle = 'time' }: TxRowProps) {
   const { byId, rootOf } = buildCategoryMap(data.categories);
   const root = rootOf(tx.categoryId);
   const category = tx.categoryId ? byId.get(tx.categoryId) : undefined;
@@ -63,9 +66,13 @@ export function TxRow({ tx, data, onClick, showDate = false }: TxRowProps) {
   if (tx.merchant) metaParts.push(tx.merchant);
   if (tx.note) metaParts.push(tx.note);
 
-  const stamp = `${showDate ? `${pad2(time.getMonth() + 1)}-${pad2(time.getDate())} ` : ''}${pad2(
-    time.getHours(),
-  )}:${pad2(time.getMinutes())}`;
+  const hhmm = `${pad2(time.getHours())}:${pad2(time.getMinutes())}`;
+  const stamp =
+    stampStyle === 'relative'
+      ? formatStampRelative(tx.occurredAt)
+      : stampStyle === 'date'
+        ? `${pad2(time.getMonth() + 1)}-${pad2(time.getDate())} ${hhmm}`
+        : hhmm;
 
   return (
     <View className='tx-row' hoverClass={onClick ? 'tx-row--hover' : undefined} onClick={onClick}>

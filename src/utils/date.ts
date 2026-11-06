@@ -194,6 +194,31 @@ export function withinRange(dateTime: string, range: DateRange): boolean {
   return day >= range.start && day <= range.end;
 }
 
+/**
+ * 展示用：相对日期 + 时间 —— 「今天 10:21」/「昨天 10:21」/「11-04 10:21」/「2025-11-04 10:21」
+ *
+ * 用于首页「最近流水」这类跨天混排的列表：只写 HH:mm 分不清哪一天，
+ * 全写 MM-DD 又会让「刚记的几笔」全变成同一串日期，反而更难扫。
+ * 三层刻度：
+ *   - 今天 / 昨天 —— 最高频，用相对说法，读起来最省力；
+ *   - 同年 —— MM-DD，够定位且短；
+ *   - 跨年 —— 补全年份，否则「11-04」会被误读成今年（真实错读，不是观感问题）。
+ */
+export function formatStampRelative(value: string, now: Date = new Date()): string {
+  const d = parseDateStr(value);
+  const day = value.slice(0, 10);
+  const today = toDateStr(now);
+  let label: string;
+  if (day === today) label = '今天';
+  else if (day === addDays(today, -1)) label = '昨天';
+  else if (d.getFullYear() === now.getFullYear()) {
+    label = `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  } else {
+    label = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  }
+  return `${label} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
 /** 展示用：10月23日 15:06 */
 export function formatDateTime(value: string): string {
   const d = parseDateStr(value);

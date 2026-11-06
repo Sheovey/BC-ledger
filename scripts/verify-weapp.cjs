@@ -72,6 +72,31 @@ const withTimeout = (p, ms, label) =>
   const sysInfo = await mp.systemInfo();
   check('模拟器信息可读', Boolean(sysInfo.platform), `${sysInfo.platform} ${sysInfo.windowWidth}x${sysInfo.windowHeight}`);
 
+  // 首页「最近流水」的时间戳必须带日期。只写 HH:mm 时，跨天的几条记录分不清是哪天
+  // （老板 2026-11-06 反馈）。空数据时没有行可验，跳过不判失败。
+  const homeStamps = await page.$$('.tx-row__time');
+  if (homeStamps.length) {
+    const stampTexts = [];
+    for (const el of homeStamps) stampTexts.push((await el.text()).trim());
+    check(
+      '最近流水时间戳带日期',
+      stampTexts.every((t) => /^(今天|昨天|\d{2}-\d{2}|\d{4}-\d{2}-\d{2}) \d{2}:\d{2}$/.test(t)),
+      stampTexts.slice(0, 3).join(' / '),
+    );
+  } else {
+    console.log('  · 首页暂无流水行，跳过时间戳格式校验');
+  }
+
+  // 三处列表的时间戳口径各不同，靠传参区分而不是各写一份组件：
+  // 首页跨天混排要相对日期、统计页明细要 MM-DD、流水页按日分组只需时间。
+  const readSrc = (...p) => fs.readFileSync(path.join(__dirname, '..', 'src', ...p), 'utf8');
+  check('首页最近流水用相对日期', /stampStyle='relative'/.test(readSrc('pages', 'home', 'index.tsx')));
+  check('统计页明细用 MM-DD 前缀', /stampStyle='date'/.test(readSrc('pages', 'stats', 'index.tsx')));
+  check(
+    '流水页不传 stampStyle（日期已在日分组标题上）',
+    !/stampStyle/.test(readSrc('pages', 'ledger', 'index.tsx')),
+  );
+
   // 正式包里开发页必须不存在：这条是防止有人手滑把 pages/index 之类的调试页
   // 重新注册回 app.config 的闸门，比肉眼看配置可靠。
   const registered = await mp.evaluate(() => {

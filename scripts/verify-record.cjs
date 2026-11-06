@@ -241,6 +241,23 @@ async function tapText(page, selector, text) {
   const expected = (Number(expenseBeforeText.replace(/[^\d.-]/g, '')) + 12.5).toFixed(2);
   check('首页本月支出已刷新', expenseText === expected, `页面 ${expenseText} / 期望 ${expected}`);
 
+  // 首页「最近流水」的时间戳要能看出是哪一天：刚记的这笔必须是「今天 HH:mm」。
+  // 只写 HH:mm 的话，跨天的几条记录全长得一样（老板 2026-11-06 反馈）。
+  const homeStamps = await page.$$('.tx-row__time');
+  const stampTexts = [];
+  for (const el of homeStamps) stampTexts.push((await el.text()).trim());
+  check(
+    '首页最近流水时间戳带日期',
+    stampTexts.length > 0 &&
+      stampTexts.every((t) => /^(今天|昨天|\d{2}-\d{2}|\d{4}-\d{2}-\d{2}) \d{2}:\d{2}$/.test(t)),
+    stampTexts.slice(0, 3).join(' / '),
+  );
+  check(
+    '刚记的这一笔显示为「今天」',
+    stampTexts.some((t) => /^今天 \d{2}:\d{2}$/.test(t)),
+    stampTexts[0] ?? '无行',
+  );
+
   // ---------- 7. 多笔合计：大号位显示合计，小字位显示算式 ----------
   // 原来大号位是「刚敲的操作数」，第一个数藏在下面小字里，用户看不到总数。
   await sleep(800);

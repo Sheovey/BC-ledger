@@ -319,7 +319,7 @@ export default function StatsPage() {
                           data={data}
                           key={tx.id}
                           onClick={() => navigate({ name: 'record', txId: tx.id })}
-                          showDate
+                          stampStyle='date'
                           tx={tx}
                         />
                       ))}

@@ -243,6 +243,7 @@ export default function HomePage() {
                 data={data}
                 key={tx.id}
                 onClick={() => navigate({ name: 'record', txId: tx.id })}
+                stampStyle='relative'
                 tx={tx}
               />
             ))}
