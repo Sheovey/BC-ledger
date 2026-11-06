@@ -27,7 +27,7 @@
 }
 
 .stats-head__sub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
   /* 账本名 + 区间可能很长，必须截断，否则会把右侧按钮挤出去 */
   overflow: hidden;
@@ -73,7 +73,7 @@
 .chip--sm {
   height: 24px;
   padding: 0 9px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   margin: 0 1px;
 }
 
@@ -104,7 +104,7 @@
 }
 
 .donut-center__label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
   line-height: 1.2;
 }
@@ -122,7 +122,7 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-3);
 }
 
@@ -136,7 +136,7 @@
   display: flex;
   align-items: baseline;
   justify-content: center;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-2);
 }
 
@@ -151,13 +151,13 @@
 
 .donut-caption__percent {
   margin-left: 6px;
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--text-3);
 }
 
 .donut-caption__hint {
   margin-top: 3px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--text-3);
 }
 
@@ -172,7 +172,7 @@
 
 .bar-item__percent {
   margin-left: 6px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
 }
 
@@ -189,7 +189,7 @@
 
 .legend-name__count {
   margin-left: 6px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--text-3);
   font-weight: 400;
 }
@@ -209,13 +209,13 @@
 .stats-legend__label {
   margin-left: 4px;
   margin-right: 10px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--text-3);
 }
 
 .month-bars__foot {
   padding: 8px 16px 0;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--text-3);
   text-align: center;
 }
@@ -272,7 +272,7 @@
 .rank-detail__more,
 .rank-detail__end {
   padding: 10px 14px 11px 46px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
   border-top: 1px solid var(--line);
 }

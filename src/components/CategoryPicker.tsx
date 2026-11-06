@@ -69,7 +69,7 @@ export function CategoryPicker({ data, type, selectedId, onSelect, onManage }: C
             }}
           >
             <View className='cat-item__bubble' style={{ background: root.color }}>
-              <Icon name={root.icon} size={20} />
+              <Icon name={root.icon} size={22} />
             </View>
             <Text className='cat-item__name'>{root.name}</Text>
           </View>

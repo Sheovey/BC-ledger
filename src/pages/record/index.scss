@@ -32,7 +32,7 @@
   height: 44px;
   line-height: 44px;
   text-align: center;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   letter-spacing: -0.2px;
   pointer-events: none;
@@ -43,7 +43,7 @@
 }
 
 .record__hint {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
   padding: 6px 2px 0;
 }
@@ -88,7 +88,7 @@
 
 .picker__recent-label {
   display: block;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--text-3);
   margin-bottom: 7px;
 }
@@ -119,7 +119,10 @@
   flex-wrap: nowrap;
 }
 
-/* ---------- 时间选择 ---------- */
+/* ---------- 时间选择 ----------
+   .time-sheet__cell 复用 .input 的视觉（38px 高 / 15.5px 字），但这里是
+   「点开系统 picker」的触发区而不是录入框，撑高一点既更好点，也更像可点的控件。
+   44px 是 iOS/Material 的最小推荐触控高度。 */
 .time-sheet {
   padding: 18px;
 }
@@ -128,8 +131,21 @@
   display: flex;
 }
 
+/* Picker 是小程序的 native 组件，它在 WXML 里自己是一层容器，
+   真正参与 .time-sheet__row 这条 flex 的是 picker 而不是里面的 .time-sheet__cell。
+   只给 cell 写 flex: 1 没有用——picker 按内容宽度撑开，日期串比时间串长，
+   两个框就一宽一窄。这里把等分写在 picker 上，cell 再占满它。 */
+.time-sheet__row picker {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .time-sheet__cell {
-  flex: 1;
+  width: 100%;
+  height: 44px;
+  font-size: 16px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,9 +160,10 @@
   margin-top: 12px;
 }
 
-.record__chips .chip {
-  margin: 0 8px 8px 0;
-}
+/* 这里原本还有一条 `.record__chips .chip { margin: 0 8px 8px 0 }`，
+   而全局 .record__chips 本身已经写了 gap: 8px —— 两者叠加等于每个芯片之间隔 16px。
+   字号还是 12.5 / 芯片高 30 时勉强挤得下 5 个，字号上调后「完成」就被挤到第二行，
+   变成一颗孤零零的芯片。间距只留 gap 一处。 */
 
 /* ---------- 键盘按下态 ----------
    WXSS 的 :active 在部分机型不触发，统一用 hover-class */

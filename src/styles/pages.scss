@@ -8,7 +8,7 @@
 }
 
 .home-greeting {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-3);
 }
 
@@ -27,7 +27,7 @@
 }
 
 .home-total__unit {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-3);
   padding-bottom: 5px;
 }
@@ -49,12 +49,12 @@
 }
 
 .home-stat__label {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--text-3);
 }
 
 .home-stat__value {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 620;
   margin-top: 3px;
   letter-spacing: -0.3px;
@@ -70,7 +70,7 @@
   background: var(--surface);
   border: 1px solid var(--line);
   color: var(--text-3);
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .search-bar input {
@@ -78,7 +78,7 @@
   border: none;
   background: transparent;
   min-width: 0;
-  font-size: 13.5px;
+  font-size: 14.5px;
   color: var(--text);
 }
 
@@ -123,19 +123,19 @@
 
 .book-card__name {
   display: block;
-  font-size: 15.5px;
+  font-size: 16.5px;
   font-weight: 600;
 }
 
 .book-card__meta {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
   margin-top: 3px;
 }
 
 .book-card__amount {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -164,7 +164,7 @@
 }
 
 .book-hero__label {
-  font-size: 13px;
+  font-size: 14px;
   opacity: 0.86;
   letter-spacing: 0.2px;
 }
@@ -181,7 +181,7 @@
   display: flex;
   gap: 18px;
   margin-top: 14px;
-  font-size: 12.5px;
+  font-size: 13.5px;
   opacity: 0.95;
 }
 
@@ -206,7 +206,7 @@
   border-radius: 9px;
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
-  font-size: 12.5px;
+  font-size: 13.5px;
   backdrop-filter: blur(6px);
 }
 
@@ -231,13 +231,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--text-2);
   font-weight: 500;
 }
 
 .period-card__label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-3);
   margin-top: 2px;
 }
@@ -251,14 +251,14 @@
 }
 
 .period-card__num {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 620;
   font-variant-numeric: tabular-nums;
 }
 
 .period-card__tag {
   display: block;
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: var(--text-3);
 }
 
@@ -276,12 +276,12 @@
   align-items: center;
   gap: 8px;
   padding: 8px 2px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
 }
 
 .day-head__day {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-2);
 }
@@ -330,7 +330,7 @@
 
 .tx-row__name {
   display: block;
-  font-size: 14.5px;
+  font-size: 15.5px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -339,7 +339,7 @@
 
 .tx-row__note {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
   margin-top: 2px;
   white-space: nowrap;
@@ -354,14 +354,14 @@
 
 .tx-row__amount {
   display: block;
-  font-size: 15.5px;
+  font-size: 16.5px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .tx-row__time {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-3);
   margin-top: 2px;
 }
@@ -394,14 +394,14 @@
 }
 
 .record__title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   flex: 1;
   text-align: center;
 }
 
 .record__save {
-  font-size: 14.5px;
+  font-size: 15.5px;
   font-weight: 600;
   color: var(--text-3);
   padding: 6px 8px;
@@ -422,10 +422,10 @@
 
 .record__type {
   flex: 0 0 auto;
-  height: 30px;
-  padding: 0 12px;
-  border-radius: 9px;
-  font-size: 13.5px;
+  height: 34px;
+  padding: 0 13px;
+  border-radius: 10px;
+  font-size: 14.5px;
   color: var(--text-2);
   transition: all 0.16s ease;
 }
@@ -520,13 +520,13 @@
 .record__field-label {
   width: 34px;
   flex-shrink: 0;
-  font-size: 13.5px;
+  font-size: 14.5px;
   color: var(--text-2);
 }
 
 .record__field-value {
   flex: 1;
-  font-size: 14.5px;
+  font-size: 15.5px;
   text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -548,7 +548,7 @@
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 14.5px;
+  font-size: 15.5px;
   text-align: right;
   min-width: 0;
 }
@@ -610,7 +610,7 @@
   box-sizing: content-box;
   background: var(--surface);
   border-top: 1px solid var(--line);
-  font-size: 13.5px;
+  font-size: 14.5px;
   color: var(--text-2);
   transition: background 0.16s ease;
 }
@@ -629,7 +629,7 @@
 .keypad__type {
   flex: 1;
   border-radius: 9px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--text-3);
   background: var(--surface-2);
   transition: all 0.16s ease;
@@ -673,7 +673,7 @@
   grid-row: span 2;
   background: linear-gradient(180deg, #f4a955, var(--accent));
   color: #fff;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   writing-mode: vertical-rl;
   letter-spacing: 2px;
@@ -696,7 +696,7 @@
 }
 
 .stats-total-label {
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--text-3);
 }
 
@@ -719,7 +719,7 @@
 .stats-range__label {
   min-width: 158px;
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-2);
 }
 
@@ -767,7 +767,7 @@
 
 .legend-name {
   flex: 1;
-  font-size: 14px;
+  font-size: 15px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -775,7 +775,7 @@
 }
 
 .legend-percent {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
   width: 52px;
@@ -783,7 +783,7 @@
 }
 
 .legend-amount {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   width: 84px;
@@ -801,7 +801,7 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 14px;
   margin-bottom: 6px;
   gap: 10px;
 }
@@ -842,7 +842,7 @@
 
 .settings-group__title {
   padding: 14px 16px 8px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-3);
   letter-spacing: 0.3px;
 }
@@ -868,11 +868,11 @@
 
 .settings-row__label {
   flex: 1;
-  font-size: 14.5px;
+  font-size: 15.5px;
 }
 
 .settings-row__value {
-  font-size: 13.5px;
+  font-size: 14.5px;
   color: var(--text-3);
 }
 
@@ -906,8 +906,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 10px 2px;
+  gap: 7px;
+  padding: 10px 1px;
   border-radius: 12px;
   transition: background 0.14s ease;
 }
@@ -920,10 +920,13 @@
   box-shadow: 0 0 0 2px var(--accent);
 }
 
+/* 46px 是 5 列宫格的舒适上限：弹层满宽 375，减去 .cat-grid 左右各 8px = 359，
+   每列 71.8px（含 4px 列距），46px 气泡两侧各余 10px 以上，不挤。
+   图标随之 20→22，与气泡仍保持 0.48 的比例，看起来「撑得起来」又不溢出。 */
 .cat-item__bubble {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -931,7 +934,7 @@
 }
 
 .cat-item__name {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--text-2);
   max-width: 100%;
   overflow: hidden;
@@ -955,11 +958,11 @@
 
 .cat-sub {
   flex: 0 0 auto;
-  height: 28px;
-  padding: 0 11px;
-  border-radius: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 9px;
   background: var(--surface-2);
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--text-2);
 }
 
@@ -1013,7 +1016,7 @@
 }
 
 .month-bar__label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-3);
 }
 
@@ -1030,7 +1033,7 @@
 
 .rank-index {
   width: 18px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
@@ -1090,7 +1093,7 @@
 
 .login__sub {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-2);
 }
 
@@ -1111,7 +1114,7 @@
 }
 
 .login__label {
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--text-2);
   padding-left: 2px;
 }
@@ -1154,7 +1157,7 @@
   border-radius: var(--radius-sm);
   background: var(--income-soft);
   color: var(--danger);
-  font-size: 12.5px;
+  font-size: 13.5px;
   line-height: 1.5;
 }
 
@@ -1163,7 +1166,7 @@
   border: 0;
   background: transparent;
   color: var(--text-3);
-  font-size: 12.5px;
+  font-size: 13.5px;
   padding: 2px 6px;
   cursor: pointer;
 }
@@ -1171,14 +1174,14 @@
 .login__hint {
   margin: 0;
   text-align: center;
-  font-size: 11.5px;
+  font-size: 12.5px;
   line-height: 1.8;
   color: var(--text-3);
 }
 
 .login__note {
   margin: 4px 2px 0;
-  font-size: 11.5px;
+  font-size: 12.5px;
   line-height: 1.7;
   color: var(--text-3);
 }
@@ -1186,7 +1189,7 @@
 .settings-row__sub {
   display: block;
   margin-top: 2px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 400;
   color: var(--text-3);
 }
@@ -1202,7 +1205,7 @@
   border: 1px solid var(--line-strong);
   background: var(--surface-2);
   color: var(--text-2);
-  font-size: 12.5px;
+  font-size: 13.5px;
 }
 
 .login__check:disabled {
@@ -1211,7 +1214,7 @@
 
 .login__check-result {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.65;
   padding: 9px 11px;
   border-radius: var(--radius-sm);
@@ -1241,5 +1244,5 @@
 
 .login__dot {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: 13px;
 }
