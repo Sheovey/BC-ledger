@@ -16,6 +16,7 @@ import { useUiStore } from '@/store/ui';
 import { formatMoney } from '@/utils/money';
 import { resolveRange, todayStr } from '@/utils/date';
 import { navigate } from '@/router';
+import { flushPendingUpdatePrompt } from '@/utils/update';
 import './index.scss';
 
 /**
@@ -31,7 +32,11 @@ export default function HomePage() {
 
   // 底部导航由框架渲染（custom-tab-bar），这里只负责告知当前是哪一页。
   // switchTab 复用缓存页面时也会触发 onShow，所以从别的 tab 切回来高亮仍正确。
-  useDidShow(() => setActiveTab('home'));
+  useDidShow(() => {
+    setActiveTab('home');
+    // 更新提示若在记账页或弹层期间被打断，回到只读页面时补弹
+    flushPendingUpdatePrompt();
+  });
 
   const book = getBook(data);
   const currency = data.settings.currency;

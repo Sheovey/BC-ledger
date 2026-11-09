@@ -21,6 +21,7 @@ import {
 import { resolveRange, shiftRange, todayStr } from '@/utils/date';
 import { formatMoney, formatPercent } from '@/utils/money';
 import { navigate } from '@/router';
+import { flushPendingUpdatePrompt } from '@/utils/update';
 import './index.scss';
 
 /**
@@ -55,7 +56,10 @@ export default function StatsPage() {
   const book = getBook(data);
 
   // 告知底部导航当前是图表页（导航由框架渲染，见 src/custom-tab-bar）
-  useDidShow(() => setActiveTab('stats'));
+  useDidShow(() => {
+    setActiveTab('stats');
+    flushPendingUpdatePrompt();
+  });
 
   const [dimension, setDimension] = useState<StatDimension>('category');
   const [flow, setFlow] = useState<'expense' | 'income'>('expense');

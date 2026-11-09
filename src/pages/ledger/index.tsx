@@ -30,6 +30,7 @@ import {
 } from '@/utils/date';
 import { formatMoney, sumFen } from '@/utils/money';
 import { navigate } from '@/router';
+import { flushPendingUpdatePrompt } from '@/utils/update';
 import './index.scss';
 
 /**
@@ -108,7 +109,10 @@ export default function LedgerPage() {
   const nav = useNavMetrics();
 
   // 告知底部导航当前是流水页（导航由框架渲染，见 src/custom-tab-bar）
-  useDidShow(() => setActiveTab('ledger'));
+  useDidShow(() => {
+    setActiveTab('ledger');
+    flushPendingUpdatePrompt();
+  });
 
   const book = getBook(data);
   const [bookId, setBookId] = useState(book?.id ?? '');

@@ -26,6 +26,7 @@ import { describeSyncState } from '@/db/sync';
 import { formatMoney } from '@/utils/money';
 import { resolveRange, todayStr, withinRange } from '@/utils/date';
 import { navigate } from '@/router';
+import { flushPendingUpdatePrompt } from '@/utils/update';
 import './index.scss';
 
 /**
@@ -87,7 +88,10 @@ export default function SettingsPage() {
   const nav = useNavMetrics();
 
   // 告知底部导航当前是我的页（导航由框架渲染，见 src/custom-tab-bar）
-  useDidShow(() => setActiveTab('settings'));
+  useDidShow(() => {
+    setActiveTab('settings');
+    flushPendingUpdatePrompt();
+  });
 
   const book = getBook(data);
   const [sheet, setSheet] = useState<'currency' | 'monthDay' | null>(null);
