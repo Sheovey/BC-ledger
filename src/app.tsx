@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react'
-import { getAccountInfoSync, useDidHide, useLaunch } from '@tarojs/taro'
+import Taro, { getAccountInfoSync, useDidHide, useLaunch } from '@tarojs/taro'
 import { flushPersist, setPersistHook, useStore } from '@/store/useStore'
 import {
   archiveDirPath,
@@ -60,6 +60,54 @@ exposeDebugHooks()
 // 这条反向依赖，这里用闭包把 getState 递进去。
 initArchive({ getData: () => useStore.getState().data })
 
+// 新版本提示。
+//
+// 微信只在小程序**冷启动**时检查更新，包下载完成后要「重启小程序」才生效；
+// 切后台 30 分钟内再回来属于热启动，内存里还是旧代码，永远换不到新包。
+// 1.1.5 之前没接这段，用户只能靠「杀掉微信再进一次」碰到新版本，而且不知道
+// 要退几次。这里在包下载完成时主动问一句，点确认立刻重启。
+//
+// 两个必须守住的细节：
+//   1. applyUpdate() 会立刻重启，内存里未落盘的状态随之消失 → 先 flushPersist()。
+//      storage 本身是持久的，重启后账本照旧，丢的只有 250ms 防抖窗口里那一笔。
+//   2. 弹窗期间用户可能正在输入，所以**不自动重启**，只给「立即重启 / 稍后」。
+//      选「稍后」不会丢更新，下次冷启动会再问一次。
+function setupUpdateManager() {
+  try {
+    // 开发者工具里没有真实的新版本可下，跳过以免弹窗挡住验收脚本
+    if (getAccountInfoSync().miniProgram.envVersion === 'develop') return
+    // 基础库 < 1.9.90 没有该 API，此时退回「退出重进」自然生效，不报错
+    const mgr = Taro.getUpdateManager()
+    if (!mgr) return
+
+    mgr.onUpdateReady(() => {
+      Taro.showModal({
+        title: '发现新版本',
+        content: '新版本已下载完成，重启小程序即可使用。',
+        confirmText: '立即重启',
+        cancelText: '稍后',
+      })
+        .then((res) => {
+          if (!res.confirm) return
+          try {
+            flushPersist()
+          } catch {
+            /* 落盘失败也不能卡住更新 */
+          }
+          mgr.applyUpdate()
+        })
+        .catch(() => {
+          /* 点遮罩关闭时个别基础库走 reject，属正常操作，忽略 */
+        })
+    })
+
+    // 下载失败不打扰用户：下次冷启动会自动重试
+    mgr.onUpdateFailed(() => {})
+  } catch {
+    /* 环境不支持就当没有这段，不影响启动 */
+  }
+}
+
 function App({ children }: PropsWithChildren) {
   useLaunch(() => {
     // 生命周期里任何异常都会变成冷启动白屏，比丢功能严重得多，一律兜住
@@ -73,6 +121,7 @@ function App({ children }: PropsWithChildren) {
           /* 存档失败不影响启动 */
         }
       }, 3000)
+      setupUpdateManager()
     } catch {
       /* 忽略 */
     }

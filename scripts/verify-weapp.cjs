@@ -97,6 +97,19 @@ const withTimeout = (p, ms, label) =>
     !/stampStyle/.test(readSrc('pages', 'ledger', 'index.tsx')),
   );
 
+  // 更新提示：没接这段时用户只能靠「杀掉微信再进一次」碰到新版本，切后台回来
+  // 属于热启动、内存里仍是旧代码。两条静态守卫 —— 一是必须接 applyUpdate，
+  // 二是 applyUpdate 之前必须先 flushPersist，否则重启会丢掉防抖窗口里那一笔。
+  const appSrc = readSrc('app.tsx');
+  check('已接入更新管理器', /getUpdateManager/.test(appSrc) && /applyUpdate\(\)/.test(appSrc));
+  const flushIdx = appSrc.indexOf('flushPersist()');
+  const applyIdx = appSrc.lastIndexOf('applyUpdate()');
+  check(
+    '重启前先落盘（flushPersist 在 applyUpdate 之前）',
+    flushIdx > -1 && applyIdx > -1 && flushIdx < applyIdx,
+    `flush@${flushIdx} apply@${applyIdx}`,
+  );
+
   // 正式包里开发页必须不存在：这条是防止有人手滑把 pages/index 之类的调试页
   // 重新注册回 app.config 的闸门，比肉眼看配置可靠。
   const registered = await mp.evaluate(() => {
