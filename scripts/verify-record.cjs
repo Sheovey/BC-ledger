@@ -122,13 +122,17 @@ async function tapText(page, selector, text) {
   // 都只看真实渲染调用，避免注释里提到关键字造成误报。
   const RECORD_SRC = fs.readFileSync(path.join(__dirname, '..', 'src', 'pages', 'record', 'index.tsx'), 'utf8');
   check(
-    '点金额区会展开键盘',
-    /record__amount-box'[^>]*onClick=\{\(\)\s*=>\s*setKeypadOpen\(true\)\}/.test(RECORD_SRC),
+    '点金额区会展开键盘并恢复光标',
+    /record__amount-box'[\s\S]{0,240}?setKeypadOpen\(true\)[\s\S]{0,120}?setAmountActive\(true\)/.test(RECORD_SRC),
   );
   check(
-    '光标只在键盘展开时渲染',
-    /\{keypadOpen && !amount\.text && !amount\.expression \? <View className='record__amount-caret' \/> : null\}/.test(RECORD_SRC) &&
-      /\{keypadOpen && \(amount\.text \|\| amount\.expression\) \? <View className='record__amount-caret' \/> : null\}/.test(RECORD_SRC),
+    '光标只在键盘展开且金额为焦点时渲染',
+    (RECORD_SRC.match(/keypadOpen && amountActive &&/g) || []).length === 2,
+  );
+  check(
+    '点备注或商家会收起金额光标',
+    (RECORD_SRC.match(/onFocus=\{\(\) => setAmountActive\(false\)\}/g) || []).length === 2 &&
+      (RECORD_SRC.match(/onClick=\{\(\) => setAmountActive\(false\)\}/g) || []).length === 2,
   );
 
   // 多选分类：同根累加、跨根替换 —— 这是「一级只能一个、二级可多选」的实现契约
@@ -216,8 +220,22 @@ async function tapText(page, selector, text) {
       : '取不到位置',
   );
 
+  // 点进备注后金额上的光标必须收起：光标是自绘的，没有浏览器那样的焦点机制，
+  // 留着它会出现两个插入点的暗示，用户分不清字会落到哪。这是本条的实证。
+  const noteInput = await page.$('.record__note-input');
+  check('备注输入框存在', Boolean(noteInput));
+  if (noteInput) {
+    await noteInput.tap();
+    await sleep(600);
+    check('点进备注后金额光标收起', (await page.$$('.record__amount-caret')).length === 0);
+    await (await page.$('.record__amount-box')).tap();
+    await sleep(600);
+    check('点回金额区后光标恢复', (await page.$$('.record__amount-caret')).length === 1);
+  }
+
   // ---------- 4. 选分类（多选：同一一级下勾两个子分类） ----------
-  await fields[0].tap();
+  const fieldsNow = await page.$$('.record__field');
+  await fieldsNow[0].tap();
   await sleep(600);
   const roots = await page.$$('.cat-item');
   check('分类弹层打开', roots.length > 0, `根分类 ${roots.length} 个`);

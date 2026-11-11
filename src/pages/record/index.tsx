@@ -96,6 +96,19 @@ export default function RecordPage() {
    */
   const [keypadOpen, setKeypadOpen] = useState(true);
 
+  /**
+   * 金额是否「正在被输入」。
+   *
+   * 光标是自绘的，没有系统输入框那样的焦点机制，只能用一个状态描述它。
+   * 键盘展开期间如果无条件显示光标，用户点进备注时金额上的光标仍留在原处，
+   * 屏幕上出现两个插入点的暗示，分不清字符会落到哪 —— 这正是「只展开键盘
+   * 就等于正在输金额」这个假设不成立的地方。
+   *
+   * 判据绑定「最后一次与金额有关的操作」：点金额区、按自绘键盘任意键 → 亮；
+   * 点进备注或商家输入框 → 灭。灭掉只是隐藏光标，键盘与已输入内容都不动。
+   */
+  const [amountActive, setAmountActive] = useState(true);
+
   const amount = useAmountInput({
     initial: existing ? fenToYuanString(existing.amount) : '',
   });
@@ -264,17 +277,28 @@ export default function RecordPage() {
       </View>
 
       <View className='record__scroll'>
-        <View className='record__amount-box' onClick={() => setKeypadOpen(true)}>
+        <View
+          className='record__amount-box'
+          onClick={() => {
+            setKeypadOpen(true);
+            setAmountActive(true);
+          }}
+        >
           <Text className='record__currency'>{data.settings.currency}</Text>
           <View className='record__amount-line'>
-            {/* 光标只在键盘展开（可输入）时出现，让「现在正在往这里输入」这件事看得见。
+            {/* 光标只在「键盘展开且金额是当前输入目标」时出现，让「现在正在往这里输入」
+                这件事看得见；点进备注后必须收起，否则会出现两个插入点。
                 完全空白时贴着最左（占位 0.00 的左侧），一旦有数字或已进入算式就贴到末尾——
                 与真实输入框一致；否则光标会停在占位符 0.00 后面，看着像已经输了 4 个字符。 */}
-            {keypadOpen && !amount.text && !amount.expression ? <View className='record__amount-caret' /> : null}
+            {keypadOpen && amountActive && !amount.text && !amount.expression ? (
+              <View className='record__amount-caret' />
+            ) : null}
             <Text className={`record__amount ${amount.placeholder ? 'record__amount--placeholder' : ''}`}>
               {amount.display}
             </Text>
-            {keypadOpen && (amount.text || amount.expression) ? <View className='record__amount-caret' /> : null}
+            {keypadOpen && amountActive && (amount.text || amount.expression) ? (
+              <View className='record__amount-caret' />
+            ) : null}
           </View>
         </View>
         {amount.expression ? <View className='record__hint'>{amount.expression}</View> : null}
@@ -303,11 +327,12 @@ export default function RecordPage() {
           <Icon className='row__chevron' name='forward' size={16} />
         </View>
 
-        <View className='record__field'>
+        <View className='record__field' onClick={() => setAmountActive(false)}>
           <Icon className='record__field-icon' name='edit' size={18} />
           <Text className='record__field-label'>备注</Text>
           <Input
             className='record__note-input'
+            onFocus={() => setAmountActive(false)}
             onInput={(event) => setNote(event.detail.value)}
             placeholder='点击填写备注'
             placeholderClass='record__note-ph'
@@ -346,11 +371,12 @@ export default function RecordPage() {
           </View>
         ) : null}
 
-        <View className='record__field'>
+        <View className='record__field' onClick={() => setAmountActive(false)}>
           <Icon className='record__field-icon' name='merchant' size={18} />
           <Text className='record__field-label'>商家</Text>
           <Input
             className='record__note-input'
+            onFocus={() => setAmountActive(false)}
             onInput={(event) => setMerchant(event.detail.value)}
             placeholder='选填'
             placeholderClass='record__note-ph'
@@ -374,7 +400,11 @@ export default function RecordPage() {
         <Keypad
           confirmDisabled={type !== 'balance' && amount.resolveFen() <= 0}
           onConfirm={save}
-          onPress={amount.press}
+          onPress={(key) => {
+            // 按键盘任意键即视为回到金额输入，光标随之回来
+            setAmountActive(true);
+            amount.press(key);
+          }}
           onTypeChange={switchType}
           onCollapse={() => setKeypadOpen(false)}
           type={type}
