@@ -254,6 +254,11 @@ check(
     check('R6a 能点开「清空所有数据」确认框', tapped);
     await sleep(600);
 
+    // 弹层计数：打开时必须 >0（tabBar 才会让位），关闭后必须归零。
+    // 残留会让底部导航整条永久消失，是这套机制里唯一不可自愈的故障。
+    const depthOpen = await mp.evaluate(() => globalThis.__ledgerUi.getState().sheetDepth);
+    check('R6a-2 弹层打开时 sheetDepth > 0', depthOpen > 0, `depth=${depthOpen}`);
+
     const descEl = await page.$('.dialog__desc');
     check('R6b 弹窗里有 .dialog__desc', Boolean(descEl));
 
@@ -286,7 +291,9 @@ check(
     // 关掉弹窗，避免影响后续脚本（page 本身没有 tap，只能拿到元素再点）
     const overlay = await page.$('.overlay');
     if (overlay) await overlay.tap();
-    await sleep(300);
+    await sleep(500);
+    const depthClosed = await mp.evaluate(() => globalThis.__ledgerUi.getState().sheetDepth);
+    check('R6g 关闭弹层后 sheetDepth 归零', depthClosed === 0, `depth=${depthClosed}`);
   } catch (e) {
     check('R6 运行时检查执行', false, e.message);
   }

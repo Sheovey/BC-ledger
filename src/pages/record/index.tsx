@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import Taro from '@tarojs/taro';
 import { View, Text, Input, Picker } from '@tarojs/components';
 import type { Tx, TxType } from '@/types';
 import { useStore, toast } from '@/store/useStore';
@@ -125,6 +126,9 @@ export default function RecordPage() {
     if (next === 'transfer' || next === 'balance') {
       setCategoryIds([]);
     }
+    // 切换类型属于「与金额有关的操作」（顶部类型条、键盘左侧切换、套用模板都会走这里），
+    // 切完接着输的通常是金额，光标应当回来
+    setAmountActive(true);
   };
 
   /** 余额模式：输入的是「调整后的目标余额」，保存时换算成差额 */
@@ -401,7 +405,15 @@ export default function RecordPage() {
           confirmDisabled={type !== 'balance' && amount.resolveFen() <= 0}
           onConfirm={save}
           onPress={(key) => {
-            // 按键盘任意键即视为回到金额输入，光标随之回来
+            // 按键盘任意键即视为回到金额输入，光标随之回来。
+            // 同时收掉还开着的系统键盘：备注输入框若仍聚焦，它的系统光标会和
+            // 金额光标同时亮，又回到「两个插入点」的处境。真机上自绘键盘通常被
+            // 系统键盘遮住点不到，但这个窗口在键盘收起过程中确实存在。
+            try {
+              Taro.hideKeyboard().catch(() => {});
+            } catch {
+              /* 基础库不支持或当前没有键盘，忽略 */
+            }
             setAmountActive(true);
             amount.press(key);
           }}
@@ -413,7 +425,11 @@ export default function RecordPage() {
         <View
           className='keypad-reopen'
           hoverClass='keypad-reopen--hover'
-          onClick={() => setKeypadOpen(true)}
+          onClick={() => {
+            setKeypadOpen(true);
+            // 「继续输入」的语义就是接着输金额，没有光标等于让人不知道从哪下手
+            setAmountActive(true);
+          }}
         >
           <Icon name='edit' size={15} />
           <Text className='keypad-reopen__label'>继续输入</Text>

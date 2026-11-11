@@ -231,6 +231,21 @@ async function tapText(page, selector, text) {
     await (await page.$('.record__amount-box')).tap();
     await sleep(600);
     check('点回金额区后光标恢复', (await page.$$('.record__amount-caret')).length === 1);
+
+    // 「继续输入」也是与金额有关的入口：收起键盘再展开后光标必须回来。
+    // 只按 keypadOpen 判断会漏这里 —— 键盘开了却看不到插入点，等于没说从哪下手。
+    const note2 = await page.$('.record__note-input');
+    if (note2) await note2.tap();
+    await sleep(400);
+    await (await page.$('.keypad__handle')).tap();
+    await sleep(600);
+    check('收起键盘后出现「继续输入」', Boolean(await page.$('.keypad-reopen')));
+    await (await page.$('.keypad-reopen')).tap();
+    await sleep(600);
+    check(
+      '点「继续输入」后键盘与光标都回来',
+      (await page.$$('.keypad')).length === 1 && (await page.$$('.record__amount-caret')).length === 1,
+    );
   }
 
   // ---------- 4. 选分类（多选：同一一级下勾两个子分类） ----------

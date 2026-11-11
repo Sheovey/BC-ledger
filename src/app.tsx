@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from 'react'
 import { getAccountInfoSync, useDidHide, useLaunch } from '@tarojs/taro'
 import { flushPersist, setPersistHook, useStore } from '@/store/useStore'
+import { useUiStore } from '@/store/ui'
 import {
   archiveDirPath,
   archiveNow,
@@ -54,6 +55,9 @@ function exposeDebugHooks() {
   }
   // 更新提示的判定是纯函数但依赖当前路由，静态检查查不出 route 格式是否对得上
   g.__ledgerUpdate = { canPromptNow: __debugCanPrompt, isPending: __debugPending }
+  // 弹层计数：残留会让自定义 tabBar 永久隐藏（底部导航整条消失），
+  // 这个值只有读得到才能验，所以一并挂出来
+  g.__ledgerUi = useUiStore
 }
 
 exposeDebugHooks()
