@@ -29,8 +29,28 @@ function stamp() {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+/**
+ * 镜像脱敏。docs/ 会推到公开仓库，源文件里的 AppID 与本机绝对路径只留在本地。
+ *
+ * 为什么不直接改源文件：助手需要真实路径与 AppID 才能干活（打开项目、核对后台），
+ * 公开副本不需要。所以只在复制这一步做替换，源文件一个字符都不动。
+ *
+ * 加新规则时注意别误伤 markdown 链接与 URL：只匹配「单字母盘符 + 冒号 + 分隔符」。
+ */
+const REDACT = [
+  [/wx[0-9a-f]{16}/g, '<AppID>'],
+  // 盘符前必须是「非字母数字」。否则 `https://github.com` 里的 `s:/` 会被当成
+  // 「盘符 s + 斜杠 + 路径」整段替换成 `<本机路径>`，把 URL 毁掉（实测踩过）。
+  [/(?<![A-Za-z0-9])[A-Za-z]:\\[^\s`"')）,，;；]*/g, '<本机路径>'],
+  [/(?<![A-Za-z0-9])[A-Za-z]:\/[^\s`"')）,，;；]*/g, '<本机路径>'],
+];
+
+function redact(src) {
+  return REDACT.reduce((acc, [re, to]) => acc.replace(re, to), src);
+}
+
 function withNotice(src, relFrom, time) {
-  const note = `> ⚠️ 本文件是**镜像**，由 \`npm run docs\` 从 \`${relFrom}\` 生成（${time}）。请修改源文件后重新运行，不要直接编辑这里。`;
+  const note = `> ⚠️ 本文件是**镜像**，由 \`npm run docs\` 从 \`${relFrom}\` 生成（${time}），并已脱敏（AppID 与本机绝对路径替换为占位符）。请修改源文件后重新运行，不要直接编辑这里。`;
   const lines = src.split(/\r?\n/);
   const h1 = lines.findIndex((l) => l.startsWith('# '));
   if (h1 === -1) return `${note}\n\n${src}`;
@@ -49,7 +69,7 @@ for (const { from, to } of PAIRS) {
     continue;
   }
   const src = fs.readFileSync(srcPath, 'utf8');
-  const body = withNotice(src, from, time);
+  const body = withNotice(redact(src), from, time);
   const dest = path.join(OUT, to);
   fs.writeFileSync(dest, body, 'utf8');
   console.log(
