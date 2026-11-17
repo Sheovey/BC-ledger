@@ -37,6 +37,49 @@
   color: var(--text-3);
 }
 
+/* 超期未备份提醒。整行可点，底色与普通行拉开。
+   文字用 --text 而不是 --text-3：这是提示不是注释，
+   --text-3 在浅底上约 2.4:1，读不清的提醒等于没提醒。 */
+.settings-row--alert {
+  background: var(--accent-soft);
+  align-items: flex-start;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.settings-note--alert {
+  color: var(--text);
+}
+
+/* 按下时不换成 surface-2：那会和普通行的按下态撞成一样，
+   提醒带会瞬间「消失」。改为轻微降透明，保持色相不变。 */
+.settings-row--alert.settings-row--hover {
+  background: var(--accent-soft);
+  opacity: 0.82;
+}
+
+/* 小程序原生 button 自带 margin、边框、固定行高和 18px 字号，
+   直接套 .settings-row 会比相邻的 View 行高出一截、还多一圈边框。
+   这里把它压回与普通行完全一致（反馈入口用 open-type=contact，必须是 button）。 */
+.settings-row--button {
+  margin: 0;
+  padding: 13px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  line-height: normal;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  text-align: left;
+  overflow: visible;
+}
+
+/* 原生 button 用 ::after 画那条 1px 边框，只写 border: none 去不掉 */
+.settings-row--button::after {
+  border: none;
+}
+
 /* 最后一组与底部导航之间留白（.shell 已有 tabbar 高度的 padding，
    这里再补一点，避免设置组贴着导航栏边缘） */
 .settings-foot {

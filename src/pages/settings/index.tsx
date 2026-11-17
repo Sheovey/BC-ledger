@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text } from '@tarojs/components';
+import { View, Text, Button } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import { useStore, toast } from '@/store/useStore';
 import { useUiStore } from '@/store/ui';
@@ -7,7 +7,7 @@ import { Icon } from '@/components/Icon';
 import { Sheet, ConfirmDialog } from '@/components/Sheet';
 import { useNavMetrics } from '@/hooks/useNavMetrics';
 import { getBook, summarize } from '@/store/selectors';
-import { exportCsv, exportJson, pickAndParseBackup } from '@/db/dataIO';
+import { exportCsv, exportJson, pickAndParseBackup, type ImportResult } from '@/db/dataIO';
 import { backupAt, exportedAt, markExported, restoreBackup } from '@/db/persist';
 import {
   archiveNow,
@@ -22,11 +22,13 @@ import {
   writeBookXlsx,
   type ArchiveEntry,
 } from '@/db/archive';
-import { describeSyncState } from '@/db/sync';
 import { formatMoney } from '@/utils/money';
 import { resolveRange, todayStr, withinRange } from '@/utils/date';
 import { navigate } from '@/router';
 import { flushPendingUpdatePrompt } from '@/utils/update';
+import { requestBackupPrompt } from '@/utils/backupPrompt';
+import { BackupPrompt } from '@/components/BackupPrompt';
+import { APP_VERSION } from '@/config/version';
 import './index.scss';
 
 /**
@@ -47,12 +49,23 @@ import './index.scss';
  */
 
 /**
- * 显示用版本号，**必须与微信后台上传的版本号一致**。
- * 提审时后台记录的版本来自 `cli upload -v`，界面这里读不到，只能手改同步。
+ * 版本号已抽到 src/config/version.ts：备份提醒的「升级判定」也要用它，
+ * 两处各写一份迟早对不上，而版本号对不上会让升级判定静默失效。
  */
-const APP_VERSION = '1.1.6';
 const CURRENCIES = ['¥', '$', '€', '£'];
 const MONTH_DAYS = [1, 5, 10, 15, 20, 25];
+
+/**
+ * 两个时间阈值，都以「最近一次把备份发出去」为基准。
+ *
+ * 只认 exportedAt（导出发到聊天），不认 backupAt（本机自动备份）——
+ * 后者每次记账都在更新，永远是「今天」，拿它做提醒等于永久沉默。
+ * 本机存档和微信缓存同生共死，本来就不该被当成备份。
+ */
+/** 超过这个天数没导出，在「数据」分组顶部提醒一次 */
+const BACKUP_REMIND_DAYS = 14;
+/** 清空所有数据前，超过这个天数没导出就要求过一道额外确认 */
+const RESET_GUARD_DAYS = 30;
 
 /**
  * 把时间戳说成人话。
@@ -90,7 +103,7 @@ export default function SettingsPage() {
   // 告知底部导航当前是我的页（导航由框架渲染，见 src/custom-tab-bar）
   useDidShow(() => {
     setActiveTab('settings');
-    flushPendingUpdatePrompt();
+    if (!flushPendingUpdatePrompt()) requestBackupPrompt();
   });
 
   const book = getBook(data);
@@ -99,15 +112,33 @@ export default function SettingsPage() {
   const [confirmDemo, setConfirmDemo] = useState(false);
   const [confirmRestore, setConfirmRestore] = useState(false);
   const [busy, setBusy] = useState(false);
+  /** 已解析但还没确认落地的备份：恢复要覆盖全量数据，必须先让人看清是哪一份 */
+  const [pendingImport, setPendingImport] = useState<ImportResult | null>(null);
+  /** 无备份时「清空所有数据」的前置拦截层，通过后才进原来的二次确认 */
+  const [resetGate, setResetGate] = useState(false);
   /** 导出/备份时间戳存在 storage 里，不随 store 变化，用 tick 手动触发重算 */
   const [stampTick, setStampTick] = useState(0);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archiveTick, setArchiveTick] = useState(0);
   const [confirmArchive, setConfirmArchive] = useState<string | null>(null);
 
-  const exportLabel = useMemo(() => relativeDay(exportedAt()), [data, stampTick]);
+  /**
+   * 最近一次「导出到聊天」的时间。
+   * 与 backupAt 严格区分：backupAt 是落盘前留的上一版，活在手机里，
+   * 清缓存就没了；只有导出去的才跨得了设备。
+   */
+  const lastExport = useMemo(() => exportedAt(), [data, stampTick]);
+  const exportLabel = useMemo(() => relativeDay(lastExport), [lastExport]);
   const backupLabel = useMemo(() => relativeDay(backupAt()), [data, stampTick]);
-  const syncState = useMemo(() => describeSyncState(), [stampTick]);
+
+  /** 备份超期判定：null 不需要提醒 / { days: null } 从未导出 / { days: N } 已 N 天 */
+  const staleExport = useMemo<{ days: number | null } | null>(() => {
+    // 还没有流水时不催：刚装完就来设置页的用户没有可丢的东西，催只会制造焦虑
+    if (data.txs.length === 0) return null;
+    if (!lastExport) return { days: null };
+    const days = Math.floor((Date.now() - lastExport) / 86_400_000);
+    return days >= BACKUP_REMIND_DAYS ? { days } : null;
+  }, [lastExport, data.txs.length]);
   const sharedLabel = useMemo(() => relativeDay(sharedAt()), [data, archiveTick]);
   const archiveInfo = useMemo(() => archiveStatus(), [data, archiveTick]);
   const archives = useMemo(() => listArchives(), [archiveTick]);
@@ -140,7 +171,8 @@ export default function SettingsPage() {
     if (outcome === 'shared') {
       // 只有文件真的交到用户手上才记时间：剪贴板那条路用户未必粘到别处，
       // 记成「已备份」会给出虚假的安全感。
-      markExported();
+      // 顺带记下条数，备份提醒靠它算「距上次导出新增了几笔」。
+      markExported(data.txs.length);
       setStampTick((t) => t + 1);
       toast('备份文件已发出');
     } else if (outcome === 'copied') {
@@ -160,6 +192,13 @@ export default function SettingsPage() {
     else toast('导出失败', 'warn');
   };
 
+  /**
+   * 选文件 → 解析 → 弹确认，不再「解析完就覆盖」。
+   *
+   * 旧实现点一下就把整份数据换掉。手机上同时躺着几份备份时，
+   * 文件名带时间戳也不等于人能认出里面是哪天的账，
+   * 而恢复选错的代价是当前数据被顶掉（虽可再回滚，但已经吓一跳）。
+   */
   const doImport = async () => {
     if (busy) return;
     setBusy(true);
@@ -170,8 +209,32 @@ export default function SettingsPage() {
       if (result.message !== '已取消') toast(result.message, 'warn');
       return;
     }
-    importData(result.data);
-    toast(result.message);
+    setPendingImport(result);
+  };
+
+  const doConfirmImport = () => {
+    const target = pendingImport;
+    setPendingImport(null);
+    if (!target?.data) return;
+    importData(target.data);
+    setStampTick((t) => t + 1);
+    toast(target.message);
+  };
+
+  /**
+   * 清空是最不可逆的入口，按「最近导出」分级：
+   * 30 天内把备份发出去过的，走原来的确认即可；否则先过一道拦截。
+   * 依据很直接——手机丢数据的真实路径就是清缓存 / 删小程序 / 换手机，
+   * 这三种里只有导出的文件活得下来。
+   */
+  const requestReset = () => {
+    const days = lastExport ? Math.floor((Date.now() - lastExport) / 86_400_000) : null;
+    const noRecentBackup = days === null || days >= RESET_GUARD_DAYS;
+    if (data.txs.length > 0 && noRecentBackup) {
+      setResetGate(true);
+      return;
+    }
+    setConfirmReset(true);
   };
 
   /** 回到本机自动保留的上一版：用于撤销「删错了」「改错了」这类误操作 */
@@ -316,6 +379,22 @@ export default function SettingsPage() {
 
       <View className='settings-group'>
         <View className='settings-group__title'>数据</View>
+        {/* 超期未导出提醒。放在分组首位且整行可点，让「提醒」本身就是入口，
+            省掉「看到提示 → 再去找导出项」这一步。 */}
+        {staleExport ? (
+          <View
+            className='settings-row settings-row--note settings-row--alert'
+            hoverClass='settings-row--hover'
+            onClick={doExportJson}
+          >
+            <Icon name='warn' size={18} />
+            <Text className='settings-note settings-note--alert'>
+              {staleExport.days === null
+                ? '还没把备份发出去过。微信清理存储空间或删除小程序会把记录一起清掉，点这里发一份到聊天存着。'
+                : `上次把备份发出去是 ${staleExport.days} 天前。微信清理存储空间或删除小程序会把记录一起清掉，建议再发一份到聊天。`}
+            </Text>
+          </View>
+        ) : null}
         <View className='settings-row' hoverClass='settings-row--hover' onClick={doExportJson}>
           <Icon name='download' size={18} />
           <Text className='settings-row__label'>
@@ -349,7 +428,7 @@ export default function SettingsPage() {
           <Text className='settings-row__label'>载入演示数据</Text>
           <Text className='settings-row__value'>用于体验图表</Text>
         </View>
-        <View className='settings-row' hoverClass='settings-row--hover' onClick={() => setConfirmReset(true)}>
+        <View className='settings-row' hoverClass='settings-row--hover' onClick={requestReset}>
           <Icon name='trash' size={18} />
           <Text className='settings-row__label danger-text'>清空所有数据</Text>
         </View>
@@ -391,6 +470,21 @@ export default function SettingsPage() {
 
       <View className='settings-group'>
         <View className='settings-group__title'>关于</View>
+        {/* 反馈走微信原生客服会话：个人主体可以收消息、不能主动下发，
+            对「收反馈」这个用途完全够用。点击直接进会话，不需要自建后端。
+            前提是后台「功能 → 客服消息」已绑好客服微信号，否则点了进不去。 */}
+        <Button
+          className='settings-row settings-row--button'
+          hoverClass='settings-row--hover'
+          openType='contact'
+        >
+          <Icon name='wechat' size={18} />
+          <Text className='settings-row__label'>
+            反馈与建议
+            <Text className='settings-row__sub'>想加的功能、用着别扭的地方，直接说</Text>
+          </Text>
+          <Icon className='row__chevron' name='forward' size={15} />
+        </Button>
         <View className='settings-row'>
           <Icon name='book' size={18} />
           <Text className='settings-row__label'>应用版本</Text>
@@ -404,7 +498,7 @@ export default function SettingsPage() {
         <View className='settings-row'>
           <Icon name='refresh' size={18} />
           <Text className='settings-row__label'>数据存放</Text>
-          <Text className='settings-row__value'>{syncState.label}</Text>
+          <Text className='settings-row__value'>仅保存在本机</Text>
         </View>
         <View className='settings-row settings-row--note'>
           <Icon name='warn' size={18} />
@@ -465,6 +559,40 @@ export default function SettingsPage() {
             ))}
           </View>
         </Sheet>
+      ) : null}
+
+      {/* 恢复前的元信息确认：条数 + 日期区间，让人一眼认出选的是哪一份 */}
+      {pendingImport ? (
+        <ConfirmDialog
+          confirmText='覆盖'
+          description={`这份备份有 ${pendingImport.data?.txs.length ?? 0} 条流水${
+            pendingImport.range
+              ? `，记账日期从 ${pendingImport.range.from} 到 ${pendingImport.range.to}`
+              : ''
+          }。确认后会替换当前所有账本的数据；当前状态会先存一份，随时能换回来。`}
+          onCancel={() => setPendingImport(null)}
+          onConfirm={doConfirmImport}
+          title='用这份备份覆盖？'
+        />
+      ) : null}
+
+      {/* 无近期导出的前置拦截。取消即安全出口：什么都不做，回到设置页 */}
+      {resetGate ? (
+        <ConfirmDialog
+          confirmText='仍然清空'
+          description={`${
+            lastExport
+              ? `最近一次把备份发出去是 ${Math.floor((Date.now() - lastExport) / 86_400_000)} 天前。`
+              : '还没有把备份发出去过。'
+          }清空之后手机里只剩自动存档，而自动存档和微信缓存同生共死——清理存储空间或删除小程序，数据就真的没有了。建议先取消，用「导出完整备份」发一份到聊天。`}
+          onCancel={() => setResetGate(false)}
+          onConfirm={() => {
+            setResetGate(false);
+            setConfirmReset(true);
+          }}
+          title='清空后可能再也找不回来'
+          tone='danger'
+        />
       ) : null}
 
       {confirmReset ? (
@@ -543,6 +671,8 @@ export default function SettingsPage() {
           title='从这份快照恢复？'
         />
       ) : null}
+
+      <BackupPrompt />
     </View>
   );
 }

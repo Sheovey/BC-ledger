@@ -17,6 +17,9 @@ import { formatMoney } from '@/utils/money';
 import { resolveRange, todayStr } from '@/utils/date';
 import { navigate } from '@/router';
 import { flushPendingUpdatePrompt } from '@/utils/update';
+import { requestBackupPrompt } from '@/utils/backupPrompt';
+import { BackupPrompt } from '@/components/BackupPrompt';
+import { FirstRunGuide } from '@/components/FirstRunGuide';
 import './index.scss';
 
 /**
@@ -34,8 +37,9 @@ export default function HomePage() {
   // switchTab 复用缓存页面时也会触发 onShow，所以从别的 tab 切回来高亮仍正确。
   useDidShow(() => {
     setActiveTab('home');
-    // 更新提示若在记账页或弹层期间被打断，回到只读页面时补弹
-    flushPendingUpdatePrompt();
+    // 更新提示若在记账页或弹层期间被打断，回到只读页面时补弹。
+    // 它占用了这次时机就让开：两个弹层叠在一起会互相遮住，用户以为点了没反应。
+    if (!flushPendingUpdatePrompt()) requestBackupPrompt();
   });
 
   const book = getBook(data);
@@ -263,6 +267,8 @@ export default function HomePage() {
           </View>
         )}
       </View>
+      <FirstRunGuide />
+      <BackupPrompt />
     </View>
   );
 }

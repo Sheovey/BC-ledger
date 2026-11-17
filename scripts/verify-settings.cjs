@@ -12,8 +12,9 @@
  * 3. 货币符号改成 $ 后 store 与页面同步变化，改回 ¥ 也生效
  * 4. 每月起始日改成 10 日后生效，改回 1 日
  * 5. 载入演示数据后流水条数明显增加
- * 6. 清空所有数据后流水归零、账本重建
- * 7. 存储占用不是「未知」
+ * 6. 无近期导出时，「数据」分组顶部出现提醒；清空数据要先过一道拦截层
+ * 7. 清空所有数据后流水归零、账本重建
+ * 8. 存储占用不是「未知」
  */
 const automator = require('miniprogram-automator');
 const { goTab } = require('./lib/nav.cjs');
@@ -184,9 +185,35 @@ async function rowTexts(page) {
   check('演示数据已写入', confirmed && afterDemo > beforeDemo + 20, `${beforeDemo} → ${afterDemo} 条`);
 
   // ---------- 6. 清空所有数据 ----------
+  // 先抹掉「最近导出」的时间戳，并重新进页面，构造「30 天内没备份」的前置条件。
+  // 两个原因：① lastExport 是挂载时算的 memo，不重进不会重算；
+  // ② 不构造的话，这条走哪条分支取决于脚本之前有没有导出过，断言就成了看运气。
+  // key 来自 src/db/persist.ts 的 exportAtKey()：backupKey() + '.export'，
+  // 未登录分区下 backupKey 即 'ledger-app.backup.v1'。
+  await mp.evaluate(() => {
+    try {
+      globalThis.wx.removeStorageSync('ledger-app.backup.v1.export');
+    } catch (e) {
+      /* 本来就没有，也算构造成功 */
+    }
+  });
+  await mp.reLaunch('/pages/settings/index');
+  await sleep(1200);
+  page = await waitForPage(mp, 'pages/settings/index');
+
+  const alertRow = await page.$('.settings-row--alert');
+  check('超期未备份时「数据」分组顶部出现提醒', Boolean(alertRow));
+
   await tapText(page, '.settings-row', '清空所有数据');
   await sleep(900);
+  const guardTitle = await page.$('.sheet__title');
+  const guardText = guardTitle ? await guardTitle.text() : '';
+  check('无近期备份时先弹拦截层', guardText.includes('再也找不回来'), guardText || '未弹出');
+
+  const passedGuard = await tapText(page, '.sheet .btn', '仍然清空');
+  await sleep(700);
   const resetDialog = await page.$('.sheet');
+  check('通过拦截后弹原确认框', Boolean(resetDialog) && passedGuard);
   check('清空确认框弹出', Boolean(resetDialog));
   const resetOk = await tapText(page, '.sheet .btn', '确定');
   await sleep(1800);

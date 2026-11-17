@@ -22,6 +22,8 @@ import { resolveRange, shiftRange, todayStr } from '@/utils/date';
 import { formatMoney, formatPercent } from '@/utils/money';
 import { navigate } from '@/router';
 import { flushPendingUpdatePrompt } from '@/utils/update';
+import { requestBackupPrompt } from '@/utils/backupPrompt';
+import { BackupPrompt } from '@/components/BackupPrompt';
 import './index.scss';
 
 /**
@@ -58,7 +60,7 @@ export default function StatsPage() {
   // 告知底部导航当前是图表页（导航由框架渲染，见 src/custom-tab-bar）
   useDidShow(() => {
     setActiveTab('stats');
-    flushPendingUpdatePrompt();
+    if (!flushPendingUpdatePrompt()) requestBackupPrompt();
   });
 
   const [dimension, setDimension] = useState<StatDimension>('category');
@@ -396,6 +398,7 @@ export default function StatsPage() {
           </View>
         </View>
       </View>
+      <BackupPrompt />
     </View>
   );
 }

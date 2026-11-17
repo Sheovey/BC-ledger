@@ -19,6 +19,16 @@ import {
   writeSnapshotJson,
 } from '@/db/archive'
 import { setupUpdateManager, __debugCanPrompt, __debugPending } from '@/utils/update'
+import {
+  evaluateBackupPrompt,
+  forceBackupPrompt,
+  requestBackupPrompt,
+  requestPreUpgradeBackup,
+  resetUpgradeCache,
+  willBlockBeforeUpgrade,
+  __afterPromptRuns,
+} from '@/utils/backupPrompt'
+import { hasOnboarded, markOnboarded, resetOnboarded, shouldAutoShow } from '@/utils/onboard'
 import './app.scss'
 
 // 调试钩子：把 store 与存档 API 挂到全局，自动化脚本（scripts/*.cjs）靠它在
@@ -58,6 +68,27 @@ function exposeDebugHooks() {
   // 弹层计数：残留会让自定义 tabBar 永久隐藏（底部导航整条消失），
   // 这个值只有读得到才能验，所以一并挂出来
   g.__ledgerUi = useUiStore
+  // 备份提醒：判定逻辑是纯函数，但依赖 storage 里的时间戳与条数，
+  // 只有能在逻辑层直接调用，验收才能覆盖「该弹 / 不该弹」的分支。
+  // forcePrompt 供 UI 验证用（develop 环境默认不自动弹，会挡住其他脚本的点击）。
+  g.__ledgerBackup = {
+    evaluate: evaluateBackupPrompt,
+    request: requestBackupPrompt,
+    forcePrompt: forceBackupPrompt,
+    resetUpgrade: resetUpgradeCache,
+    // 升级前拦截：判据与真实链路共用一份，验收测的就是实际跑的那条
+    preUpgradeProbe: willBlockBeforeUpgrade,
+    preUpgrade: () => requestPreUpgradeBackup(() => {}),
+    afterRuns: __afterPromptRuns,
+  }
+  // 首次引导：不暴露重置就只能清整个 storage 才能再看一次，
+  // 而清 storage 会连账本一起清掉，验收里代价太大。
+  g.__ledgerGuide = {
+    isDone: hasOnboarded,
+    canAutoShow: shouldAutoShow,
+    mark: markOnboarded,
+    reset: resetOnboarded,
+  }
 }
 
 exposeDebugHooks()

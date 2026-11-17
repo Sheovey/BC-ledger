@@ -730,3 +730,82 @@
 .progress__fill--over {
   background: var(--danger);
 }
+
+/* ---------- 首次使用引导（1.1.7） ---------- */
+/* z-index 200 高于 .overlay(100)：它是启动时的最后一道，不该被别的弹层压住。
+   但真正盖住 tabBar 靠的是 sheetDepth 隐藏，不是这里的层级——
+   tabBar 由框架渲染在页面之上，页面内的 z-index 对它无效。 */
+.guide {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 18px;
+  background: rgba(16, 18, 22, 0.55);
+  box-sizing: border-box;
+}
+
+.guide__card {
+  width: 100%;
+  max-height: 100%;
+  padding: 24px 20px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.guide__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.guide__title {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.guide__sub {
+  font-size: 13.5px;
+  color: var(--text-3);
+  line-height: 1.4;
+}
+
+.guide__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.guide__text {
+  flex: 1;
+  font-size: 14.5px;
+  line-height: 1.72;
+  color: var(--text-2);
+}
+
+/* 风险提示单独给底色：它和上面两条卖点是同一件事的两面，
+   不该因为读起来不讨喜就被混在优点里跳过。 */
+.guide__row--warn {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+
+.guide__row--warn .guide__text {
+  color: var(--text);
+}
+
+.guide__btn {
+  margin-top: 2px;
+  flex: none;
+}

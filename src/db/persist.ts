@@ -100,6 +100,24 @@ function exportAtKey(target: string | null = scope): string {
   return `${backupKey(target)}.export`;
 }
 
+/** 导出那一刻的流水条数。只存时间算不出「新增了几笔」，而新增量是提醒的第二条判据 */
+function exportedTxCountKey(target: string | null = scope): string {
+  return `${backupKey(target)}.txcount`;
+}
+
+/** 上次弹「该备份了」的时间。没有这个就没有冷却期，会每笔都弹 */
+function promptAtKey(target: string | null = scope): string {
+  return `${backupKey(target)}.prompt`;
+}
+
+/**
+ * 上次启动时看到的版本号，用于识别「升级后第一次启动」。
+ *
+ * 设备级、刻意不分账号分区：版本是代码包本身的属性，与登录哪个账号无关；
+ * 换账号后仍应认定「刚升级过」。
+ */
+const SEEN_VERSION_KEY = 'ledger-app.version.seen';
+
 /**
  * 清空分片写缓存。
  * 场景：另一个标签页/另一个上下文已经改写了同一分区，本页的分片缓存随之失效；
@@ -484,13 +502,18 @@ export function restoreBackup(): LedgerData | null {
 }
 
 /**
- * 记录最近一次「导出到文件」的时间。
+ * 记录最近一次「导出到文件」的时间与当时的流水条数。
  * 与备份是两回事：备份在手机里，导出后的文件在手机外，
  * 前者挡不住清缓存，后者才挡得住，所以两者分开计时。
+ *
+ * txCount 必须一起存：只记时间的话，「距上次导出新增了几笔」无法计算，
+ * 而「数据攒了多少」正是决定该不该提醒的另一条腿。
  */
-export function markExported(): void {
+export function markExported(txCount: number): void {
   try {
-    getStorageDriver().setItem(exportAtKey(), String(Date.now()));
+    const driver = getStorageDriver();
+    driver.setItem(exportAtKey(), String(Date.now()));
+    driver.setItem(exportedTxCountKey(), String(Math.max(0, Math.floor(txCount))));
   } catch {
     /* 忽略 */
   }
@@ -504,6 +527,56 @@ export function exportedAt(): number | null {
     return Number.isFinite(stamp) && stamp > 0 ? stamp : null;
   } catch {
     return null;
+  }
+}
+
+/** 上次导出时的流水条数；从未导出过返回 0 */
+export function exportedTxCount(): number {
+  try {
+    const value = getStorageDriver().getItem(exportedTxCountKey());
+    if (!value) return 0;
+    const count = Number(value);
+    return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** 上次弹出备份提醒的时间（毫秒），没有则 null */
+export function promptAt(): number | null {
+  try {
+    const value = getStorageDriver().getItem(promptAtKey());
+    if (!value) return null;
+    const stamp = Number(value);
+    return Number.isFinite(stamp) && stamp > 0 ? stamp : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 在「真正展示给用户」时调用，而不是点击时：弹出来就已经打扰过了 */
+export function markPromptShown(): void {
+  try {
+    getStorageDriver().setItem(promptAtKey(), String(Date.now()));
+  } catch {
+    /* 记不住冷却时间不影响记账，最坏结果是下次还会提醒 */
+  }
+}
+
+/** 上次启动时记录的版本号，没有则 null（全新安装或首次接入此功能） */
+export function seenVersion(): string | null {
+  try {
+    return getStorageDriver().getItem(SEEN_VERSION_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function markSeenVersion(version: string): void {
+  try {
+    getStorageDriver().setItem(SEEN_VERSION_KEY, version);
+  } catch {
+    /* 写入失败只会让下次仍判定为「刚升级」，最多多提醒一次 */
   }
 }
 

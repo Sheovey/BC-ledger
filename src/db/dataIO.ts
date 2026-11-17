@@ -30,10 +30,19 @@ function csvCell(value: string): string {
   return value;
 }
 
+/**
+ * 文件名时间戳，精确到分钟。
+ *
+ * 只到日的话，同一天导出多次会在聊天里留下一串同名文件
+ * （ledger-backup-20261113.json × 3），分不清哪份是最新的，
+ * 而「选错备份」正是恢复时最难被察觉的错误。
+ * 分钟粒度足以区分人工操作，也不会把文件名拖得太长。
+ */
 function stamp(): string {
   const d = new Date();
   const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
+  const day = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
+  return `${day}-${p(d.getHours())}${p(d.getMinutes())}`;
 }
 
 /** 生成完整备份文本（纯函数，不做 IO） */
@@ -115,6 +124,14 @@ export interface ImportResult {
   ok: boolean;
   message: string;
   data?: LedgerData;
+  /**
+   * 备份覆盖的记账日期范围（YYYY-MM-DD）。
+   *
+   * 只报「N 条流水」不够用：手机里同时躺着几份备份时，条数接近的两份
+   * 从提示上看不出区别，用户无从判断选的是不是想要的那一份。
+   * 日期区间是人唯一能一眼认出「这是哪一版」的信息。
+   */
+  range?: { from: string; to: string };
 }
 
 /** 校验并补全备份结构；只接受本应用导出的格式 */
@@ -143,7 +160,10 @@ export function parseBackupText(text: string): ImportResult {
         ...parsed.settings,
       },
     };
-    return { ok: true, message: `已读取 ${data.txs.length} 条流水`, data };
+    // occurredAt 是 ISO 文本（YYYY-MM-DDTHH:mm），字典序即时间序，不必转 Date
+    const days = data.txs.map((tx) => tx.occurredAt.slice(0, 10)).filter(Boolean).sort();
+    const range = days.length ? { from: days[0], to: days[days.length - 1] } : undefined;
+    return { ok: true, message: `已读取 ${data.txs.length} 条流水`, data, range };
   } catch {
     return { ok: false, message: '文件格式错误，无法解析' };
   }

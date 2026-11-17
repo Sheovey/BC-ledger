@@ -31,6 +31,8 @@ import {
 import { formatMoney, sumFen } from '@/utils/money';
 import { navigate } from '@/router';
 import { flushPendingUpdatePrompt } from '@/utils/update';
+import { requestBackupPrompt } from '@/utils/backupPrompt';
+import { BackupPrompt } from '@/components/BackupPrompt';
 import './index.scss';
 
 /**
@@ -111,7 +113,7 @@ export default function LedgerPage() {
   // 告知底部导航当前是流水页（导航由框架渲染，见 src/custom-tab-bar）
   useDidShow(() => {
     setActiveTab('ledger');
-    flushPendingUpdatePrompt();
+    if (!flushPendingUpdatePrompt()) requestBackupPrompt();
   });
 
   const book = getBook(data);
@@ -514,6 +516,7 @@ export default function LedgerPage() {
           </View>
         </Sheet>
       ) : null}
+      <BackupPrompt />
     </View>
   );
 }

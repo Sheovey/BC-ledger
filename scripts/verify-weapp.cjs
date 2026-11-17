@@ -113,9 +113,16 @@ const withTimeout = (p, ms, label) =>
     flushIdx > -1 && applyIdx > -1 && flushIdx < applyIdx,
     `flush@${flushIdx} apply@${applyIdx}`,
   );
+  // 判据已抽到 promptGate.ts，与备份提醒共用一套，update.ts 只剩引用。
+  // 断言必须跟着走：只查 update.ts 会误判成「守卫丢了」，
+  // 只查 promptGate 又会漏掉「没人引用它」这种静默失效。
+  const gateSrc = readSrc('utils', 'promptGate.ts');
   check(
     '记账页与弹层期间延后提示',
-    /FORM_ROUTES = \['pages\/record\/index'\]/.test(upSrc) && /sheetDepth > 0/.test(upSrc),
+    /FORM_ROUTES = \['pages\/record\/index'\]/.test(gateSrc) &&
+      /sheetDepth\s*>\s*0/.test(gateSrc) &&
+      /from '@\/utils\/promptGate'/.test(upSrc),
+    '判据在 promptGate.ts，update.ts 必须引用',
   );
   const tabs = ['home', 'ledger', 'stats', 'settings'];
   const noFlush = tabs.filter(

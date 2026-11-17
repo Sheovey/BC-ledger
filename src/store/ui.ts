@@ -15,6 +15,22 @@ import { create } from 'zustand';
 
 export type TabKey = 'home' | 'ledger' | 'stats' | 'settings';
 
+/** 备份提醒弹层要显示的内容。判定在 utils/backupPrompt.ts，这里只承载结果 */
+export interface BackupPromptInfo {
+  /** 距上次导出多少天；null 表示从未导出过 */
+  days: number | null;
+  /** 距上次导出新增的流水笔数 */
+  newTx: number;
+  /** 本次启动是否为「升级后第一次」——文案要据此调整，这种情况冷却期不生效 */
+  upgrade: boolean;
+  /**
+   * 升级前拦截：新包已下完但尚未应用时弹出。
+   * 判据比常规提醒宽得多（只要存在未备份的新增就提醒），
+   * 因为这是唯一能赶在版本切换之前的时机。
+   */
+  preUpgrade?: boolean;
+}
+
 interface UiState {
   activeTab: TabKey;
   setActiveTab: (key: TabKey) => void;
@@ -32,6 +48,9 @@ interface UiState {
   sheetDepth: number;
   openSheet: () => void;
   closeSheet: () => void;
+  /** 备份提醒弹层要显示的内容；null 表示不显示 */
+  backupPrompt: BackupPromptInfo | null;
+  setBackupPrompt: (info: BackupPromptInfo | null) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -40,5 +59,7 @@ export const useUiStore = create<UiState>((set) => ({
   sheetDepth: 0,
   openSheet: () => set((prev) => ({ sheetDepth: prev.sheetDepth + 1 })),
   closeSheet: () => set((prev) => ({ sheetDepth: Math.max(0, prev.sheetDepth - 1) })),
+  backupPrompt: null,
+  setBackupPrompt: (info) => set({ backupPrompt: info }),
 }));
 

@@ -14,7 +14,6 @@ import type {
 } from '@/types';
 import { isoNow, uid } from '@/utils/id';
 import { loadData, saveData, rotateBackup, dataKeyPrefix, invalidateWriteCache } from '@/db/persist';
-import { syncAfterWrite } from '@/db/sync';
 import { createAccountsForBook, createBook, createInitialData, createPresetCategories } from '@/db/seed';
 import { buildDemoData } from '@/db/demo';
 import { txCategoryIds } from './selectors';
@@ -118,8 +117,6 @@ function doPersist(data: LedgerData) {
     });
   }
   persistHook?.(data);
-  // 云同步未启用时内部直接返回，只有一次 storage 读的开销
-  syncAfterWrite(data);
 }
 
 function schedulePersist(data: LedgerData) {

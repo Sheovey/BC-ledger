@@ -58,6 +58,8 @@ interface ConfirmProps {
   title: string;
   description?: string;
   confirmText?: string;
+  /** 默认「取消」。备份提醒这类「现在不做也不代表拒绝」的场景需要换成「稍后再问」 */
+  cancelText?: string;
   tone?: 'default' | 'danger';
   onConfirm: () => void;
   onCancel: () => void;
@@ -67,6 +69,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmText = '确定',
+  cancelText = '取消',
   tone = 'default',
   onConfirm,
   onCancel,
@@ -78,7 +81,7 @@ export function ConfirmDialog({
       ) : null}
       <View className='dialog__actions'>
         <View className='btn btn--ghost' hoverClass='btn--hover' onClick={onCancel}>
-          取消
+          {cancelText}
         </View>
         <View
           className={`btn ${tone === 'danger' ? 'btn--danger' : 'btn--primary'}`}

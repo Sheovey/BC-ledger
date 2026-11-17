@@ -11,13 +11,8 @@
  */
 import Taro, { getAccountInfoSync } from '@tarojs/taro'
 import { flushPersist } from '@/store/useStore'
-import { useUiStore } from '@/store/ui'
-
-/**
- * 整页都是未提交表单的路由。目前只有记账页；
- * 以后新增「编辑资料」这类整页表单，把路由加进来即可。
- */
-const FORM_ROUTES = ['pages/record/index']
+import { canPromptNow } from '@/utils/promptGate'
+import { requestPreUpgradeBackup } from '@/utils/backupPrompt'
 
 interface Manager {
   applyUpdate: () => void
@@ -30,33 +25,6 @@ let manager: Manager | null = null
 /** 有更新等着提示（当时被打断了） */
 let pending = false
 
-function currentRoute(): string {
-  try {
-    const pages = Taro.getCurrentPages() as unknown as Array<{ route?: string }>
-    const cur = pages[pages.length - 1]
-    return (cur && cur.route) || ''
-  } catch {
-    return ''
-  }
-}
-
-/**
- * 此刻弹窗会不会打断正在填的东西。
- *
- * 判据只有两条，都是「下面压着未提交内容」的场景：
- *   1. 有 Sheet / 确认框打开 —— 分类多选、时间设置、账本切换都在这里，
- *      关掉弹层即丢失所选，被强插一个弹窗同样难受；
- *   2. 停在记账页 —— 整页表单都在内存里。
- *
- * 其余页面（首页、流水、图表、我的）都是只读展示，随时可以弹。
- */
-function canPromptNow(): boolean {
-  if (useUiStore.getState().sheetDepth > 0) return false
-  const route = currentRoute()
-  if (!route) return true
-  return !FORM_ROUTES.some((r) => route.indexOf(r) === 0)
-}
-
 /**
  * 供验收脚本在真机/模拟器里核对：
  * `getCurrentPages()` 返回的 route 到底带不带前导斜杠，静态检查查不出来，
@@ -65,14 +33,8 @@ function canPromptNow(): boolean {
 export const __debugCanPrompt = canPromptNow
 export const __debugPending = () => pending
 
-function askRestart() {
+function showRestartModal() {
   if (!manager) return
-  // 注册回调到真正弹窗之间，用户可能已经点进了记账页，这里再判一次
-  if (!canPromptNow()) {
-    pending = true
-    return
-  }
-  pending = false
   Taro.showModal({
     title: '发现新版本',
     content: '新版本已下载完成，重启小程序即可使用。',
@@ -93,6 +55,22 @@ function askRestart() {
     .catch(() => {
       /* 点遮罩关闭时个别基础库走 reject，属正常操作，忽略 */
     })
+}
+
+function askRestart() {
+  if (!manager) return
+  // 注册回调到真正弹窗之间，用户可能已经点进了记账页，这里再判一次
+  if (!canPromptNow()) {
+    pending = true
+    return
+  }
+  pending = false
+  // 先给一次备份机会。此刻新包已下载完但尚未应用，旧代码与 storage 都还在——
+  // 这是唯一能赶在「版本切换」之前提醒的时机。等 applyUpdate() 一执行，
+  // 新版本的迁移逻辑就会改写存量数据，那时再提醒已经晚了。
+  // 弹层处理完（备份成功或用户跳过）会回调 showRestartModal，重启流程不会断。
+  if (requestPreUpgradeBackup(showRestartModal)) return
+  showRestartModal()
 }
 
 /** 启动时挂一次。重复调用无副作用。 */
@@ -118,8 +96,12 @@ export function setupUpdateManager() {
  *
  * 只挂在 tab 页是有意的 —— 记账页等表单页不会成为「已经离开但还没弹」的位置，
  * 离开表单页必然落到某个 tab 页，时机由那里接住。
+ *
+ * 返回「本次是否真的去弹了」。备份提醒据此让位：两个提示同时弹会叠成两层遮罩，
+ * 上面那层关掉才会露出下面那层，用户会以为点了没反应。
  */
-export function flushPendingUpdatePrompt() {
-  if (!pending) return
-  askRestart()
+export function flushPendingUpdatePrompt(): boolean {
+  if (!pending) return false;
+  askRestart();
+  return true;
 }
