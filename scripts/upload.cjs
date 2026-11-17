@@ -32,12 +32,14 @@ const root = path.resolve(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const version = pkg.version;
 
-// 界面里显示的版本号必须与 package.json 一致，否则「我的」页会显示旧版本
-const settingsSrc = fs.readFileSync(path.join(root, 'src/pages/settings/index.tsx'), 'utf8');
-const shown = (settingsSrc.match(/const APP_VERSION = '([^']+)'/) || [])[1];
+// 界面里显示的版本号必须与 package.json 一致，否则「我的」页会显示旧版本。
+// 1.1.7 起 APP_VERSION 从设置页抽到了 src/config/version.ts（备份提醒的升级判定
+// 也要读它，两处各写一份迟早对不上），所以校验目标跟着迁移。
+const versionSrc = fs.readFileSync(path.join(root, 'src/config/version.ts'), 'utf8');
+const shown = (versionSrc.match(/APP_VERSION = '([^']+)'/) || [])[1];
 if (shown !== version) {
-  console.error(`✗ 版本号不一致：package.json = ${version}，界面 APP_VERSION = ${shown ?? '(没找到)'}`);
-  console.error(`  先把 src/pages/settings/index.tsx 的 APP_VERSION 改成 ${version} 再上传。`);
+  console.error(`✗ 版本号不一致：package.json = ${version}，src/config/version.ts = ${shown ?? '(没找到)'}`);
+  console.error(`  先把 src/config/version.ts 的 APP_VERSION 改成 ${version} 再上传。`);
   process.exit(1);
 }
 
