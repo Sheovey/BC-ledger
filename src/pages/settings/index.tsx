@@ -190,10 +190,9 @@ export default function SettingsPage() {
       toast('已记录备份时间');
       return;
     }
-    // 没发出就什么都不做，只如实告诉用户这次没算备份。
-    // 不自动复制剪贴板：那是替用户做了他没要求的事，而且 setClipboardData 自己
-    // 还会再弹一次「内容已复制」，与确认框叠在一起很吵。要复制可以回去再点一次导出。
-    toast('这次没有记为备份，之后仍会提醒');
+    // 没发出就只提示一句，不自动复制剪贴板：那是替用户做了他没要求的事，
+    // 而且 setClipboardData 自己还会再弹一次「内容已复制」，与确认框叠在一起很吵。
+    toast('备份失败', 'warn');
   };
 
   const doExportCsv = async () => {

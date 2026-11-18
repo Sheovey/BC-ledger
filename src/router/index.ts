@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro';
 import type { Route } from '@/types';
+import { TOAST_MS } from '@/config/ui';
 
 /**
  * 路由适配层。
@@ -62,7 +63,7 @@ export function routeToUrl(route: Route): string {
 
 function guard(route: Route): boolean {
   if (READY.has(route.name)) return true;
-  Taro.showToast({ title: '该页面尚未迁移', icon: 'none', duration: 1500 });
+  Taro.showToast({ title: '该页面尚未迁移', icon: 'none', duration: TOAST_MS });
   return false;
 }
 
@@ -75,7 +76,7 @@ function reportFail(action: string, error: unknown): void {
   const message = error instanceof Error ? error.message : String(error ?? '');
   // eslint-disable-next-line no-console
   console.warn(`[router] ${action} 失败:`, message);
-  Taro.showToast({ title: '页面跳转失败，请重试', icon: 'none', duration: 1500 });
+  Taro.showToast({ title: '页面跳转失败，请重试', icon: 'none', duration: TOAST_MS });
 }
 
 /** 前进（对应 Web 版 navigate） */

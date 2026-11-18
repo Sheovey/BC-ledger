@@ -69,8 +69,8 @@ export function BackupPrompt() {
         markExported(data.txs.length);
         toast('已记录备份时间');
       } else {
-        // 没发出就只如实说一句，不自动复制剪贴板（理由见 pages/settings 的 doExportJson）
-        toast('这次没有记为备份，之后仍会提醒');
+        // 没发出就只提示一句，不自动复制剪贴板（理由见 pages/settings 的 doExportJson）
+        toast('备份失败', 'warn');
       }
     } else if (outcome === 'copied') {
       toast('已复制备份全文到剪贴板');

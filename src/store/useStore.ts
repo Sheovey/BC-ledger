@@ -14,6 +14,7 @@ import type {
 } from '@/types';
 import { isoNow, uid } from '@/utils/id';
 import { loadData, saveData, rotateBackup, dataKeyPrefix, invalidateWriteCache } from '@/db/persist';
+import { TOAST_MS, TOAST_WARN_MS } from '@/config/ui';
 import { createAccountsForBook, createBook, createInitialData, createPresetCategories } from '@/db/seed';
 import { buildDemoData } from '@/db/demo';
 import { txCategoryIds } from './selectors';
@@ -445,7 +446,7 @@ export function toast(text: string, tone: 'info' | 'warn' = 'info') {
   Taro.showToast({
     title,
     icon: 'none',
-    duration: tone === 'warn' ? 2600 : 2000,
+    duration: tone === 'warn' ? TOAST_WARN_MS : TOAST_MS,
   });
 }
 
