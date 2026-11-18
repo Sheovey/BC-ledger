@@ -29,6 +29,7 @@ import {
   __afterPromptRuns,
 } from '@/utils/backupPrompt'
 import { hasOnboarded, markOnboarded, resetOnboarded, shouldAutoShow } from '@/utils/onboard'
+import { APP_VERSION } from '@/config/version'
 import './app.scss'
 
 // 调试钩子：把 store 与存档 API 挂到全局，自动化脚本（scripts/*.cjs）靠它在
@@ -80,6 +81,9 @@ function exposeDebugHooks() {
     preUpgradeProbe: willBlockBeforeUpgrade,
     preUpgrade: () => requestPreUpgradeBackup(() => {}),
     afterRuns: __afterPromptRuns,
+    // 验收脚本靠它构造「已是最新版本」的前置条件。
+    // 不能硬编码版本号——bump 一次，"不等于当前版本"就成立，升级分支会被误触发。
+    currentVersion: APP_VERSION,
   }
   // 首次引导：不暴露重置就只能清整个 storage 才能再看一次，
   // 而清 storage 会连账本一起清掉，验收里代价太大。

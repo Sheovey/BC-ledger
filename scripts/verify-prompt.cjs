@@ -96,7 +96,7 @@ const K = {
     // 视为「已是最新版本」，先把升级因素排除掉，后续单独测
     const s = globalThis.__ledgerStore.getState();
     try {
-      w.setStorageSync('ledger-app.version.seen', '1.1.7');
+      w.setStorageSync('ledger-app.version.seen', globalThis.__ledgerBackup.currentVersion);
     } catch (e) {
       /* 忽略 */
     }
@@ -143,8 +143,10 @@ const K = {
 
   // ---------- 4. 升级后跳过冷却 → due ----------
   await mp.evaluate(() => {
-    // 把「上次看到的版本」伪造成旧版，再清掉进程内缓存，模拟升级后首次启动
-    globalThis.wx.setStorageSync('ledger-app.version.seen', '1.1.6');
+    // 把「上次看到的版本」伪造成一个恒不等于当前版本的值，再清掉进程内缓存，
+    // 模拟升级后首次启动。不能写死具体版本号——那会在 bump 后变成「等于当前」
+    // 或产生歧义，1.1.7→1.1.8 时就因为写死 '1.1.7' 导致冷却期断言误报。
+    globalThis.wx.setStorageSync('ledger-app.version.seen', '0.0.0');
     globalThis.__ledgerBackup.resetUpgrade();
   });
   const d4 = await mp.evaluate(() => globalThis.__ledgerBackup.evaluate());

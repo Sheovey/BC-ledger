@@ -12,8 +12,7 @@
  * 2. 导出失败也不把弹层留在屏幕上——用户已经点过了，留着他还得再点一次关闭。
  */
 import { useState } from 'react';
-import Taro from '@tarojs/taro';
-import { buildJsonText, exportJson } from '@/db/dataIO';
+import { exportJson } from '@/db/dataIO';
 import { markExported } from '@/db/persist';
 import { useStore, toast } from '@/store/useStore';
 import { useUiStore, type BackupPromptInfo } from '@/store/ui';
@@ -70,12 +69,8 @@ export function BackupPrompt() {
         markExported(data.txs.length);
         toast('已记录备份时间');
       } else {
-        try {
-          await Taro.setClipboardData({ data: buildJsonText(data) });
-          toast('已复制备份全文到剪贴板');
-        } catch {
-          toast('导出失败，可到「我的」页手动备份', 'warn');
-        }
+        // 没发出就只如实说一句，不自动复制剪贴板（理由见 pages/settings 的 doExportJson）
+        toast('这次没有记为备份，之后仍会提醒');
       }
     } else if (outcome === 'copied') {
       toast('已复制备份全文到剪贴板');
