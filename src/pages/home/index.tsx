@@ -15,7 +15,7 @@ import { useStore } from '@/store/useStore';
 import { useUiStore } from '@/store/ui';
 import { formatMoney } from '@/utils/money';
 import { resolveRange, todayStr } from '@/utils/date';
-import { navigate } from '@/router';
+import { navigate, replaceTo } from '@/router';
 import { flushPendingUpdatePrompt } from '@/utils/update';
 import { requestBackupPrompt } from '@/utils/backupPrompt';
 import { BackupPrompt } from '@/components/BackupPrompt';
@@ -123,7 +123,7 @@ export default function HomePage() {
 
         <View
           className='search-bar'
-          onClick={() => navigate({ name: 'ledger' })}
+          onClick={() => replaceTo({ name: 'ledger' })}
           style={{ marginTop: 14, width: '100%' }}
         >
           <Icon name='search' size={17} />
@@ -241,7 +241,7 @@ export default function HomePage() {
       <View className='section'>
         <View className='section__head'>
           <Text className='section__title'>最近流水</Text>
-          <View className='text-btn' hoverClass='text-btn--hover' onClick={() => navigate({ name: 'ledger' })}>
+          <View className='text-btn' hoverClass='text-btn--hover' onClick={() => replaceTo({ name: 'ledger' })}>
             查看全部
           </View>
         </View>

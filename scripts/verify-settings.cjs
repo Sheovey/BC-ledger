@@ -15,6 +15,7 @@
  * 6. 无近期导出时，「数据」分组顶部出现提醒；清空数据要先过一道拦截层
  * 7. 清空所有数据后流水归零、账本重建
  * 8. 存储占用不是「未知」
+ * 9. 导出备份后必须先确认「是否真的发出」，不盲信 shareFileMessage 的返回值
  */
 const automator = require('miniprogram-automator');
 const { goTab } = require('./lib/nav.cjs');
@@ -121,6 +122,18 @@ async function rowTexts(page) {
   ];
   const missingData = dataRows.filter((m) => !joined.includes(m));
   check('数据操作 6 项齐全', missingData.length === 0, missingData.length ? `缺 ${missingData.join('、')}` : '全部命中');
+
+  // wx.shareFileMessage 的 success 只代表接口调起，用户在转发面板直接返回也算成功
+  // （2026-11-18 实机确认）。所以「是否真的发出去了」不能由返回值推断，必须问用户一次，
+  // 否则 markExported 会被误记——备份提醒在之后 14 天里彻底沉默，而数据其实还在本机。
+  const settingsSrc = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'pages', 'settings', 'index.tsx'),
+    'utf8',
+  );
+  check(
+    '导出后先确认是否真的发出再记备份时间',
+    /confirmShareDone\(\)/.test(settingsSrc),
+  );
 
   // 「导出备份」与「本机自动存档」最容易被混为一谈，文案必须点出唯一关键差异：
   // 前者能换手机恢复，后者只是可跨设备查阅的 Excel，回灌不了。

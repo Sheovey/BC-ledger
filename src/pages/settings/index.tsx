@@ -7,7 +7,7 @@ import { Icon } from '@/components/Icon';
 import { Sheet, ConfirmDialog } from '@/components/Sheet';
 import { useNavMetrics } from '@/hooks/useNavMetrics';
 import { getBook, summarize } from '@/store/selectors';
-import { exportCsv, exportJson, pickAndParseBackup, type ImportResult } from '@/db/dataIO';
+import { buildJsonText, exportCsv, exportJson, pickAndParseBackup, type ImportResult } from '@/db/dataIO';
 import { backupAt, exportedAt, markExported, restoreBackup } from '@/db/persist';
 import {
   archiveNow,
@@ -26,6 +26,7 @@ import { formatMoney } from '@/utils/money';
 import { resolveRange, todayStr, withinRange } from '@/utils/date';
 import { navigate } from '@/router';
 import { flushPendingUpdatePrompt } from '@/utils/update';
+import { confirmShareDone } from '@/utils/confirmShare';
 import { requestBackupPrompt } from '@/utils/backupPrompt';
 import { BackupPrompt } from '@/components/BackupPrompt';
 import { APP_VERSION } from '@/config/version';
@@ -163,21 +164,36 @@ export default function SettingsPage() {
     }
   }, [data]);
 
+  /**
+   * 导出备份。
+   *
+   * 「已发出」不能由 shareFileMessage 的返回值推断——用户在转发面板直接返回、
+   * 未选任何聊天，也会走 success（2026-11-18 实机确认）。所以面板调起后再问一次：
+   * 确认发出才记备份时间；说没发出的转存剪贴板兜底，且不记时间。
+   */
   const doExportJson = async () => {
     if (busy) return;
     setBusy(true);
     const outcome = await exportJson(data);
+    if (outcome !== 'shared') {
+      setBusy(false);
+      if (outcome === 'copied') toast('已复制备份全文到剪贴板');
+      else toast('导出失败', 'warn');
+      return;
+    }
+    const done = await confirmShareDone();
     setBusy(false);
-    if (outcome === 'shared') {
-      // 只有文件真的交到用户手上才记时间：剪贴板那条路用户未必粘到别处，
-      // 记成「已备份」会给出虚假的安全感。
-      // 顺带记下条数，备份提醒靠它算「距上次导出新增了几笔」。
+    if (done) {
+      // 确认发出才记时间与条数：误记会让备份提醒在之后的 14 天里彻底沉默
       markExported(data.txs.length);
       setStampTick((t) => t + 1);
-      toast('备份文件已发出');
-    } else if (outcome === 'copied') {
+      toast('已记录备份时间');
+      return;
+    }
+    try {
+      await Taro.setClipboardData({ data: buildJsonText(data) });
       toast('已复制备份全文到剪贴板');
-    } else {
+    } catch {
       toast('导出失败', 'warn');
     }
   };
@@ -187,7 +203,7 @@ export default function SettingsPage() {
     setBusy(true);
     const outcome = await exportCsv(data, book.id);
     setBusy(false);
-    if (outcome === 'shared') toast('CSV 已发出');
+    if (outcome === 'shared') toast('已打开转发面板，确认聊天里收到即可');
     else if (outcome === 'copied') toast('已复制 CSV 全文到剪贴板');
     else toast('导出失败', 'warn');
   };
@@ -291,7 +307,7 @@ export default function SettingsPage() {
     if (ok) {
       markShared();
       setArchiveTick((t) => t + 1);
-      toast('已发出，去聊天里存一份');
+      toast('已打开转发面板，确认聊天里收到即可');
     } else {
       toast('发送失败，可到「查看本机存档」打开后手动转发', 'warn');
     }

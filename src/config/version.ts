@@ -8,4 +8,4 @@
  * 必须与 `package.json.version` 保持一致：`npm run upload` 以 package.json
  * 为唯一源，并校验此处不一致即退出。
  */
-export const APP_VERSION = '1.1.7';
+export const APP_VERSION = '1.1.8';

@@ -12,11 +12,13 @@
  * 2. 导出失败也不把弹层留在屏幕上——用户已经点过了，留着他还得再点一次关闭。
  */
 import { useState } from 'react';
-import { exportJson } from '@/db/dataIO';
+import Taro from '@tarojs/taro';
+import { buildJsonText, exportJson } from '@/db/dataIO';
 import { markExported } from '@/db/persist';
 import { useStore, toast } from '@/store/useStore';
 import { useUiStore, type BackupPromptInfo } from '@/store/ui';
 import { dismissBackupPrompt, runAfterPrompt } from '@/utils/backupPrompt';
+import { confirmShareDone } from '@/utils/confirmShare';
 import { ConfirmDialog } from './Sheet';
 
 /**
@@ -61,10 +63,20 @@ export function BackupPrompt() {
     dismissBackupPrompt();
 
     if (outcome === 'shared') {
-      // 只有文件真的交到用户手上才记时间：剪贴板那条路未必粘到别处，
-      // 记成「已备份」会给出虚假的安全感。
-      markExported(data.txs.length);
-      toast('备份已发出');
+      // 面板调起 ≠ 文件发出去了（用户可以直接返回）→ 问一次，确认后才记时间。
+      // 这里的判断决定备份提醒未来两周是否还活着，不能猜。
+      const done = await confirmShareDone();
+      if (done) {
+        markExported(data.txs.length);
+        toast('已记录备份时间');
+      } else {
+        try {
+          await Taro.setClipboardData({ data: buildJsonText(data) });
+          toast('已复制备份全文到剪贴板');
+        } catch {
+          toast('导出失败，可到「我的」页手动备份', 'warn');
+        }
+      }
     } else if (outcome === 'copied') {
       toast('已复制备份全文到剪贴板');
     } else {

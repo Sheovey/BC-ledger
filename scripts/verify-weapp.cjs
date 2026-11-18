@@ -134,6 +134,23 @@ const withTimeout = (p, ms, label) =>
     noFlush.length ? `缺 ${noFlush.join('、')}` : 'all',
   );
 
+  // tab 页在 app.config 里声明为 tabBar 页面，对它们调 navigateTo 会直接失败，
+  // 用户看到的是「页面跳转失败，请重试」。2026-11-18 实测踩到：首页「查看全部」
+  // 就是 navigate({ name: 'ledger' })，而 router 里早已写好 replaceTo(switchTab)
+  // 却从来没被调用过。所以扫一遍全仓页面，防止以后又有人用 navigate 跳 tab。
+  const TAB_ROUTES = ['home', 'ledger', 'stats', 'settings'];
+  const pagesRoot = path.join(__dirname, '..', 'src', 'pages');
+  const misuse = [];
+  for (const dir of fs.readdirSync(pagesRoot)) {
+    const file = path.join(pagesRoot, dir, 'index.tsx');
+    if (!fs.existsSync(file)) continue;
+    const src = fs.readFileSync(file, 'utf8');
+    for (const tab of TAB_ROUTES) {
+      if (new RegExp(`navigate\\(\\{ name: '${tab}'`).test(src)) misuse.push(`${dir}→${tab}`);
+    }
+  }
+  check('没有对 tab 页误用 navigateTo', misuse.length === 0, misuse.join('、') || 'clean');
+
   // 运行态核对：getCurrentPages() 的 route 是否带前导斜杠，静态检查看不出来，
   // 猜错会让「记账页不弹」静默失效 —— 那种 bug 不会报错，只会在用户填到一半时
   // 突然重启。这两条是这条策略唯一的实证。

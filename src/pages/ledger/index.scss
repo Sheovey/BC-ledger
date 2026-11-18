@@ -191,11 +191,15 @@
   padding: 10px 10px 12px;
 }
 
+/* 12.5px + --text-3 是 2026-11-18 老板实机反馈「看着小、颜色浅」后调的：
+   --text-3(#9aa1ad) 对比度只有 2.37:1，低于 WCAG AA 的 4.5:1，
+   小字号叠低对比度是最难读的组合。涨到主力档 14.5 并加深到 --text-2。 */
 .ledger-totals__label {
   display: block;
   text-align: center;
-  font-size: 12.5px;
-  color: var(--text-3);
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--text-2);
   margin-bottom: 9px;
 }
 
@@ -215,9 +219,10 @@
   gap: 3px;
 }
 
+/* 同 .ledger-totals__label：小字号 + 低对比度，实机看着吃力 */
 .ledger-totals__name {
-  font-size: 12.5px;
-  color: var(--text-3);
+  font-size: 14.5px;
+  color: var(--text-2);
 }
 
 .ledger-totals__value {
